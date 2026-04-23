@@ -27,6 +27,13 @@ import { io } from 'socket.io-client';
 import { applyTemplate, downloadPDF, generateDetailedDispatchOrderPDF, generatePDFReport } from '../utils/pdfHelper';
 import LogoImage from '../assets/devzoro-1.jpg';
 
+// Custom Vehicle Icon
+const vehicleIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20]
+});
+
 const DispatchOrders = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth(); 
@@ -131,6 +138,12 @@ const DispatchOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+
+    // Disable Socket.io in production (Vercel) to avoid connection errors
+    if (import.meta.env.PROD) {
+      console.log('Socket.io disabled in production. Using polling for updates.');
+      return;
+    }
 
     const socket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001', {
       withCredentials: true,
@@ -1381,11 +1394,7 @@ const DispatchOrders = () => {
                 {selectedOrder.currentLocation?.lat && (
                   <Marker 
                     position={[selectedOrder.currentLocation.lat, selectedOrder.currentLocation.lng]}
-                    icon={L.icon({
-                      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', // Delivery Truck Icon
-                      iconSize: [40, 40],
-                      iconAnchor: [20, 20]
-                    })}
+                    icon={vehicleIcon}
                   >
                     <Popup>Live Position: {selectedOrder.assignedVehicle?.plateNumber}</Popup>
                   </Marker>

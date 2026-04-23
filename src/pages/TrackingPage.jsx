@@ -26,6 +26,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Custom Vehicle Icon
+const vehicleIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20]
+});
+
 const TrackingPage = () => {
   const { trackingId } = useParams();
   const location = useLocation();
@@ -238,11 +245,7 @@ const TrackingPage = () => {
             {currentPos && (
               <Marker 
                 position={[currentPos.lat, currentPos.lng]}
-                icon={L.icon({
-                  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-                  iconSize: [40, 40],
-                  iconAnchor: [20, 20]
-                })}
+                icon={vehicleIcon}
               >
                 <Popup>Your Location</Popup>
               </Marker>
