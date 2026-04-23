@@ -4,37 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CreateDispatch from './pages/CreateDispatch';
 import DispatchOrders from './pages/DispatchOrders';
-import Vendors from './pages/Vendors';
-import Drivers from './pages/Drivers';
 import Vehicles from './pages/Vehicles';
+import Drivers from './pages/Drivers';
 import Users from './pages/Users';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import Inventory from './pages/Inventory';
 import DashboardLayout from './layouts/DashboardLayout';
-
-// const ProtectedRoute = ({ children }) => {
-//   const { user, loading } = useAuth();
-
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center bg-light dark:bg-dark text-primary">
-//         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
-//       </div>
-//     );
-//   }
-
-//   if (!user) {
-//     return <Navigate to="/login" />;
-//   }
-
-//   return <DashboardLayout>{children}</DashboardLayout>;
-// };
-
+import TrackingPage from './pages/TrackingPage';
 
 const ProtectedRoute = ({ children, requiredPermission }) => {
   const { user, loading } = useAuth();
@@ -78,7 +57,9 @@ function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Public Tracking Route */}
+            <Route path="/track/:trackingId" element={<TrackingPage />} />
+            
             <Route 
               path="/" 
               element={
@@ -112,18 +93,10 @@ function App() {
               } 
             />
             <Route 
-              path="/inventory" 
+              path="/vehicles" 
               element={
                 <ProtectedRoute>
-                  <Inventory />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/vendors" 
-              element={
-                <ProtectedRoute>
-                  <Vendors />
+                  <Vehicles />
                 </ProtectedRoute>
               } 
             />
@@ -136,14 +109,6 @@ function App() {
               } 
             />
             <Route 
-              path="/vehicles" 
-              element={
-                <ProtectedRoute>
-                  <Vehicles />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/users" 
               element={
                 <ProtectedRoute>
@@ -151,22 +116,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            {/* <Route 
+            <Route 
               path="/reports" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermission="viewReports">
                   <Reports />
                 </ProtectedRoute>
               } 
-            /> */}
-            <Route 
-  path="/reports" 
-  element={
-    <ProtectedRoute requiredPermission="viewReports">
-      <Reports />
-    </ProtectedRoute>
-  } 
-/>
+            />
             <Route 
               path="/settings" 
               element={

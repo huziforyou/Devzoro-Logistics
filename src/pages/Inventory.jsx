@@ -50,8 +50,10 @@ const Inventory = () => {
   const filteredInventory = orders.filter(order => {
     const matchesSearch = 
       order.deliveryNoteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.assignedVendor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName?.toLowerCase().includes(searchTerm.toLowerCase());
+      (order.assignedVehicle?.plateNumber || order.assignedVehicle?.name || '')?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.loadingFrom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.offloadingTo?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesFilter = filterType === 'All' || order.quantityStatus === filterType;
     
@@ -69,11 +71,11 @@ const Inventory = () => {
   const generateInventoryPDF = async () => {
     try {
       const filename = `Inventory_Report_${new Date().getTime()}.pdf`;
-      const columns = ['DN#', 'Client', 'Vendor', 'Sent Qty', 'Recv Qty', 'Status', 'Diff', 'Date'];
+      const columns = ['DN#', 'Client', 'Vehicle', 'Sent Qty', 'Recv Qty', 'Status', 'Diff', 'Date'];
       const tableRows = filteredInventory.map(o => [
         o.deliveryNoteNumber,
         o.customerName || 'N/A',
-        o.assignedVendor?.name || 'N/A',
+        o.assignedVehicle?.plateNumber || o.assignedVehicle?.name || 'N/A',
         o.materialQuantity || '0',
         o.receivedQuantity || '0',
         o.quantityStatus,
@@ -162,7 +164,7 @@ const Inventory = () => {
           <Search className="ml-4 text-gray-400" size={20} />
           <input 
             type="text" 
-            placeholder="Search by DN, Vendor or Client..." 
+            placeholder="Search by DN, Vehicle or Client..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 bg-transparent border-none focus:ring-0 font-bold text-gray-700 dark:text-white"
@@ -187,7 +189,7 @@ const Inventory = () => {
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50/50 dark:bg-gray-800/50">
               <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 dark:border-gray-800">
-                <th className="p-6">DN & Partner</th>
+                <th className="p-6">DN & Vehicle</th>
                 <th className="p-6 text-center">Dispatch Qty</th>
                 <th className="p-6 text-center">Received Qty</th>
                 <th className="p-6 text-center">Status / Diff</th>
@@ -205,7 +207,7 @@ const Inventory = () => {
                     <div className="font-black text-sm text-gray-900 dark:text-white">{order.deliveryNoteNumber}</div>
                     <div className="flex flex-col gap-0.5 mt-1">
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-bold uppercase">
-                        <Building2 size={10} className="text-primary"/> {order.assignedVendor?.name || 'N/A'}
+                        <Building2 size={10} className="text-primary"/> {order.assignedVehicle?.plateNumber || order.assignedVehicle?.name || 'N/A'}
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase">
                         <User size={10}/> {order.customerName || 'N/A'}

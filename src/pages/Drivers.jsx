@@ -31,46 +31,56 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generatePDFReport } from '../utils/pdfHelper';
 
-const DriverModal = ({ isOpen, onClose, driver, onSave, vendors, loading }) => {
+const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     iqamaNumber: '',
-    phone: '',
-    vendor: '',
-    vehiclePlateNumber: '',
-    status: 'active',
+    phoneNumber: '',
+    assignedVehicle: '',
+    vehicleType: '',
+    status: 'pending',
     licenseExpiry: '',
-    iqamaPdf: '',
-    iqamaPdfType: ''
+    iqamaPdf: ''
   });
+
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
+  const vehicleTypes = ['FlatBack', 'Tanker', 'Trailer', 'Dyna'];
 
   useEffect(() => {
     if (driver) {
+      const driverVehicle = vehicles.find(v => v._id === (driver.assignedVehicle?._id || driver.assignedVehicle));
       setFormData({
-        name: driver.name || '',
+        fullName: driver.fullName || '',
         iqamaNumber: driver.iqamaNumber || '',
-        phone: driver.phone || '',
-        vendor: driver.vendor?._id || driver.vendor || '',
-        vehiclePlateNumber: driver.vehiclePlateNumber || '',
-        status: driver.status || 'active',
+        phoneNumber: driver.phoneNumber || '',
+        assignedVehicle: driver.assignedVehicle?._id || driver.assignedVehicle || '',
+        vehicleType: driver.vehicleType || driverVehicle?.vehicleType || '',
+        status: driver.status || 'pending',
         licenseExpiry: driver.licenseExpiry ? new Date(driver.licenseExpiry).toISOString().split('T')[0] : '',
-        iqamaPdf: driver.iqamaPdf || '',
-        iqamaPdfType: driver.iqamaPdfType || ''
+        iqamaPdf: driver.iqamaPdf || ''
       });
     } else {
       setFormData({
-        name: '',
+        fullName: '',
         iqamaNumber: '',
-        phone: '',
-        vendor: vendors[0]?._id || '',
-        vehiclePlateNumber: '',
-        status: 'active',
+        phoneNumber: '',
+        assignedVehicle: '',
+        vehicleType: '',
+        status: 'pending',
         licenseExpiry: '',
-        iqamaPdf: '',
-        iqamaPdfType: ''
+        iqamaPdf: ''
       });
     }
-  }, [driver, vendors]);
+  }, [driver, vehicles]);
+
+  useEffect(() => {
+    if (formData.vehicleType) {
+      const filtered = vehicles.filter(v => v.vehicleType === formData.vehicleType);
+      setFilteredVehicles(filtered);
+    } else {
+      setFilteredVehicles([]);
+    }
+  }, [formData.vehicleType, vehicles]);
 
   if (!isOpen) return null;
 
@@ -85,8 +95,7 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vendors, loading }) => {
       reader.onloadend = () => {
         setFormData({
           ...formData,
-          iqamaPdf: reader.result.split(',')[1],
-          iqamaPdfType: file.type
+          iqamaPdf: reader.result.split(',')[1]
         });
       };
       reader.readAsDataURL(file);
@@ -119,7 +128,7 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vendors, loading }) => {
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Full Name</label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" placeholder="Driver Full Name" />
+              <input type="text" required value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" placeholder="Driver Full Name" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -128,19 +137,36 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vendors, loading }) => {
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Phone Number</label>
-            <input type="text" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" placeholder="+966..." />
+            <input type="text" required value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" placeholder="+966..." />
           </div>
+          
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Assign Vendor</label>
-            <select required value={formData.vendor} onChange={(e) => setFormData({...formData, vendor: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none">
-              <option value="">Select Vendor</option>
-              {vendors.map(v => <option key={v._id} value={v._id}>{v.name}</option>)}
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Vehicle Type</label>
+            <select 
+              required 
+              value={formData.vehicleType} 
+              onChange={(e) => setFormData({...formData, vehicleType: e.target.value, assignedVehicle: ''})} 
+              className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
+            >
+              <option value="">Select Type</option>
+              {vehicleTypes.map(type => <option key={type} value={type}>{type}</option>)}
             </select>
           </div>
+
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Vehicle Plate #</label>
-            <input type="text" value={formData.vehiclePlateNumber} onChange={(e) => setFormData({...formData, vehiclePlateNumber: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" placeholder="ABC-1234" />
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Plate Number</label>
+            <select 
+              required 
+              disabled={!formData.vehicleType}
+              value={formData.assignedVehicle} 
+              onChange={(e) => setFormData({...formData, assignedVehicle: e.target.value})} 
+              className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none disabled:opacity-50"
+            >
+              <option value="">Select Plate</option>
+              {filteredVehicles.map(v => <option key={v._id} value={v._id}>{v.plateNumber}</option>)}
+            </select>
           </div>
+
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">License Expiry</label>
             <input type="date" value={formData.licenseExpiry} onChange={(e) => setFormData({...formData, licenseExpiry: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" />
@@ -148,9 +174,8 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vendors, loading }) => {
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Status</label>
             <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none">
+              <option value="pending">Pending</option>
               <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-              <option value="on_leave">On Leave</option>
               <option value="inactive">Inactive</option>
             </select>
           </div>
@@ -228,32 +253,16 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
   const exportDriverProfile = async () => {
     if (!driver) return;
     try {
-      const columns = ['Field', 'Value'];
       const detailsData = [
-        ['Driver Name', driver.name],
+        ['Driver Name', driver.fullName],
         ['Iqama Number', driver.iqamaNumber],
-        ['Phone', driver.phone],
-        ['Vendor', driver.vendor?.name || 'N/A'],
+        ['Phone', driver.phoneNumber],
+        ['Vehicle', driver.assignedVehicle?.plateNumber || 'N/A'],
         ['License Expiry', driver.licenseExpiry ? new Date(driver.licenseExpiry).toLocaleDateString() : 'N/A'],
-        ['Vehicle Plate', driver.vehiclePlateNumber || 'N/A'],
         ['Status', driver.status || 'Active']
       ];
 
-      const taskColumns = ['DN Number', 'Material', 'Loading From', 'Offloading To', 'Status', 'Date'];
-      const taskData = (driver.tasks || []).map(t => [
-        t.deliveryNoteNumber,
-        t.materialQuantity,
-        t.loadingFrom,
-        t.offloadingTo,
-        t.status,
-        new Date(t.createdAt).toLocaleDateString()
-      ]);
-
-      // Using generatePDFReport for both, but ideally we'd want them in one PDF. 
-      // For now, let's just export the main details and tasks combined if possible.
-      const combinedData = [...detailsData, ['', ''], ['ASSIGNED TASKS', ''], ...taskData.map(row => [row[0], row[4]])];
-      
-      await generatePDFReport(`Driver Profile: ${driver.name}`, ['Detail', 'Information'], detailsData, `Driver_Profile_${driver.name}.pdf`);
+      await generatePDFReport(`Driver Profile: ${driver.fullName}`, ['Detail', 'Information'], detailsData, `Driver_Profile_${driver.fullName}.pdf`);
     } catch (error) {
       console.error(error);
       alert("Failed to export profile");
@@ -270,7 +279,7 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
           <div>
             <h3 className="text-2xl font-black text-primary dark:text-white uppercase tracking-tight flex items-center gap-3">
               <User className="text-accent" />
-              {driver?.name}
+              {driver?.fullName}
             </h3>
             <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Enterprise Driver ID & Task History</p>
           </div>
@@ -309,11 +318,13 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Contact</p>
-                      <p className="text-lg font-black text-primary dark:text-white">{driver?.phone}</p>
+                      <p className="text-lg font-black text-primary dark:text-white">{driver?.phoneNumber}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Logistics Vendor</p>
-                      <p className="text-sm font-bold text-gray-600 dark:text-gray-400">{driver?.vendor?.name}</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Logistics Vehicle</p>
+                      <p className="text-xs font-bold text-primary dark:text-white flex items-center gap-2">
+                      <Building2 size={12} className="opacity-50" /> {driver?.assignedVehicle?.plateNumber || 'Unassigned'}
+                      </p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">License Valid Thru</p>
@@ -346,7 +357,7 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
                       className="w-full bg-gray-50 dark:bg-gray-800/50 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-inner"
                     >
                       <iframe 
-                        src={`data:${driver.iqamaPdfType || 'application/pdf'};base64,${driver.iqamaPdf}`}
+                        src={`data:application/pdf;base64,${driver.iqamaPdf}`}
                         className="w-full h-full border-none"
                         title="Iqama PDF Preview"
                       />
@@ -404,7 +415,7 @@ const Drivers = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [drivers, setDrivers] = useState([]);
-  const [vendors, setVendors] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [passModalOpen, setPassModalOpen] = useState(false);
@@ -413,7 +424,7 @@ const Drivers = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => { fetchDrivers(); fetchVendors(); }, []);
+  useEffect(() => { fetchDrivers(); fetchVehicles(); }, []);
 
   const fetchDrivers = async () => {
     try {
@@ -426,21 +437,21 @@ const Drivers = () => {
     }
   };
 
-  const fetchVendors = async () => {
+  const fetchVehicles = async () => {
     try {
-      const res = await api.get('/vendors');
-      setVendors(res.data.data);
+      const res = await api.get('/vehicles');
+      setVehicles(res.data.data);
     } catch (error) {
-      console.error('Failed to fetch vendors');
+      console.error('Failed to fetch vehicles');
     }
   };
 
   const handleSave = async (formData) => {
-    if (!formData.vendor) {
-      alert('Please select a vendor first');
+    if (!formData.assignedVehicle) {
+      alert('Please select a vehicle first');
       return;
     }
-    if (!formData.name.trim()) {
+    if (!formData.fullName.trim()) {
       alert('Please enter driver name');
       return;
     }
@@ -457,12 +468,8 @@ const Drivers = () => {
       setEditingDriver(null);
     } catch (error) {
       console.error('Driver save error:', error.response || error);
-      if (error.isNetworkError) {
-        alert('Unable to connect to server. Please check your internet connection and try again.');
-      } else {
-        const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Action failed';
-        alert(errorMsg);
-      }
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Action failed';
+      alert(errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -480,13 +487,12 @@ const Drivers = () => {
 
   const exportPDF = async () => {
     try {
-      const columns = ['Driver Name', 'Iqama Number', 'Phone', 'Vendor', 'Plate Number', 'Status'];
-      const data = drivers.map(d => [
+      const columns = ['Driver Name', 'Iqama Number', 'Phone', 'Vehicle', 'Status'];
+      const data = filteredDrivers.map(d => [
         d.name,
         d.iqamaNumber,
         d.phone,
-        d.vendor?.name || 'N/A',
-        d.vehiclePlateNumber || 'N/A',
+        d.assignedVehicleId?.name || 'N/A',
         d.status || 'Active'
       ]);
 
@@ -497,7 +503,7 @@ const Drivers = () => {
     }
   };
 
-  const filteredDrivers = drivers.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.iqamaNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredDrivers = drivers.filter(d => (d.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) || (d.iqamaNumber || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-8 pb-20">
@@ -539,13 +545,13 @@ const Drivers = () => {
                   <User size={28} />
                 </div>
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <button onClick={() => { setEditingDriver(driver); setModalOpen(true); }} className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); setEditingDriver(driver); setModalOpen(true); }} className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
                   {(user?.role === 'admin' || user?.role === 'super-admin') && (
-                    <button onClick={() => handleDelete(driver._id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(driver._id); }} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
                   )}
                 </div>
               </div>
-              <h3 className="text-xl font-black text-primary dark:text-white mb-1 tracking-tight uppercase">{driver.name}</h3>
+              <h3 className="text-xl font-black text-primary dark:text-white mb-1 tracking-tight uppercase">{driver.fullName}</h3>
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-8">Iqama: {driver.iqamaNumber}</p>
               <div className="grid grid-cols-2 gap-4 mt-auto">
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
@@ -554,7 +560,7 @@ const Drivers = () => {
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Logistics</p>
-                  <p className="text-sm font-black text-accent truncate">{driver.vendor?.name || 'N/A'}</p>
+                  <p className="text-sm font-black text-accent truncate">{driver.assignedVehicle?.plateNumber || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -563,7 +569,7 @@ const Drivers = () => {
       )}
 
       <AnimatePresence>
-        {modalOpen && <DriverModal isOpen={modalOpen} onClose={() => setModalOpen(false)} driver={editingDriver} onSave={handleSave} vendors={vendors} loading={actionLoading} />}
+        {modalOpen && <DriverModal isOpen={modalOpen} onClose={() => setModalOpen(false)} driver={editingDriver} onSave={handleSave} vehicles={vehicles} loading={actionLoading} />}
         {passModalOpen && <DriverPassModal isOpen={passModalOpen} onClose={() => setPassModalOpen(false)} driverId={selectedDriverId} />}
       </AnimatePresence>
     </div>

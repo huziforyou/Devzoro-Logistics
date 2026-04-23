@@ -172,7 +172,7 @@ export const generateDispatchOrderPDF = async (order, filename) => {
     [formatArabicText("Date:"), formatArabicText(order.createdAt ? new Date(order.createdAt).toLocaleDateString() : new Date().toLocaleDateString())],
     [formatArabicText("Driver Name:"), formatArabicText(order.assignedDriver?.name || 'N/A')],
     [formatArabicText("Vehicle Number:"), formatArabicText(order.vehiclePlateNumber || 'N/A')],
-    [formatArabicText("Vendor Name:"), formatArabicText(order.assignedVendor?.name || 'N/A')],
+    [formatArabicText("Vehicle Name:"), formatArabicText(order.assignedVehicle?.name || 'N/A')],
     [formatArabicText("Loading Point:"), formatArabicText(order.loadingFrom || 'N/A')],
     [formatArabicText("Unloading Point:"), formatArabicText(order.offloadingTo || 'N/A')],
   ];
@@ -216,7 +216,7 @@ export const generateDetailedDispatchOrderPDF = async (order, filename) => {
   const details = [
     [formatArabicText("Order ID (DN):"), formatArabicText(order.deliveryNoteNumber || 'N/A')],
     [formatArabicText("Client Name:"), formatArabicText(order.customerName || 'N/A')],
-    [formatArabicText("Vendor Name:"), formatArabicText(order.assignedVendor?.name || 'N/A')],
+    [formatArabicText("Vehicle Name:"), formatArabicText(order.assignedVehicle?.name || 'N/A')],
     [formatArabicText("Material:"), formatArabicText(order.materialDescription || 'N/A')],
     [formatArabicText("Quantity:"), formatArabicText(order.materialQuantity || '0')],
     [formatArabicText("Route:"), formatArabicText(`${order.loadingFrom} to ${order.offloadingTo}`)],

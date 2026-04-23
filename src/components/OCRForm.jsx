@@ -60,7 +60,7 @@ const FormField = ({ label, name, icon: Icon, register, error, isSelected, onTog
 const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
   const { t, i18n } = useTranslation();
   const [selectedFields, setSelectedFields] = useState([]);
-  const [vendors, setVendors] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [collectionName, setCollectionName] = useState('');
@@ -73,13 +73,13 @@ const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
       notes: '',
       status: 'pending',
       approvedBy: '',
-      pickupVendor: '',
-      deliveryVendor: '',
+      pickupVehicle: '',
+      deliveryVehicle: '',
       assignedDriver: ''
     }
   });
 
-  const selectedPickupVendor = watch('pickupVendor');
+  const selectedPickupVehicle = watch('pickupVehicle');
 
   useEffect(() => {
     if (initialData) {
@@ -107,36 +107,36 @@ const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
       });
     }
     
-    // Fetch vendors
-    const fetchVendors = async () => {
+    // Fetch vehicles
+    const fetchVehicles = async () => {
       try {
-        const res = await api.get('/vendors');
-        setVendors(res.data.data);
+        const res = await api.get('/vehicles');
+        setVehicles(res.data.data);
       } catch (err) {
-        console.error('Failed to fetch vendors');
+        console.error('Failed to fetch vehicles');
       }
     };
-    fetchVendors();
+    fetchVehicles();
   }, [initialData, setValue]);
 
-  // Fetch drivers when pickup vendor changes
+  // Fetch drivers when pickup vehicle changes
   useEffect(() => {
     const fetchDrivers = async () => {
-      if (!selectedPickupVendor) {
+      if (!selectedPickupVehicle) {
         setDrivers([]);
         return;
       }
       try {
         const res = await api.get('/drivers');
-        // Filter drivers by selected vendor
-        const filteredDrivers = res.data.data.filter(d => d.vendor?._id === selectedPickupVendor);
+        // Filter drivers by selected vehicle
+        const filteredDrivers = res.data.data.filter(d => d.vehicle?._id === selectedPickupVehicle);
         setDrivers(filteredDrivers);
       } catch (err) {
         console.error('Failed to fetch drivers');
       }
     };
     fetchDrivers();
-  }, [selectedPickupVendor]);
+  }, [selectedPickupVehicle]);
 
   const toggleField = (fieldName) => {
     setSelectedFields(prev => 
@@ -173,7 +173,7 @@ const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
     { id: 2, label: "Driver Contact #", name: "driverContactNumber", icon: Phone },
     { id: 3, label: "Vehicle Plate #", name: "vehiclePlateNumber", icon: Truck },
     { id: 4, label: "Driver Iqama #", name: "driverIqamaNumber", icon: CreditCard },
-    { id: 5, label: "Vendor Name", name: "vendorName", icon: Building },
+    { id: 5, label: "Vehicle Name", name: "vehicleName", icon: Building },
     { id: 6, label: "Loading Date/Time", name: "loadingDateTime", icon: Calendar, type: "date" },
     { id: 7, label: "Loading Location (From)", name: "loadingFrom", icon: MapPin },
     { id: 8, label: "Off Loading Location (To)", name: "offloadingTo", icon: MapPin },
@@ -259,23 +259,23 @@ const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Pickup Vendor</label>
-              <select {...register('pickupVendor')} className="w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-accent">
-                <option value="">Select Pickup Vendor</option>
-                {vendors.map(v => <option key={v._id} value={v._id}>{v.name}</option>)}
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Pickup Vehicle</label>
+              <select {...register('pickupVehicle')} className="w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-accent">
+                <option value="">Select Pickup Vehicle</option>
+                {vehicles.map(v => <option key={v._id} value={v._id}>{v.plateNumber} ({v.type})</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Delivery Vendor</label>
-              <select {...register('deliveryVendor')} className="w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-accent">
-                <option value="">Select Delivery Vendor</option>
-                {vendors.map(v => <option key={v._id} value={v._id}>{v.name}</option>)}
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Delivery Vehicle</label>
+              <select {...register('deliveryVehicle')} className="w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-accent">
+                <option value="">Select Delivery Vehicle</option>
+                {vehicles.map(v => <option key={v._id} value={v._id}>{v.plateNumber} ({v.type})</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Assigned Driver</label>
-              <select {...register('assignedDriver')} disabled={!selectedPickupVendor} className="w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-accent disabled:opacity-50">
-                <option value="">{selectedPickupVendor ? 'Select Driver' : 'Select Vendor First'}</option>
+              <select {...register('assignedDriver')} disabled={!selectedPickupVehicle} className="w-full px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-accent disabled:opacity-50">
+                <option value="">{selectedPickupVehicle ? 'Select Driver' : 'Select Vehicle First'}</option>
                 {drivers.map(d => <option key={d._id} value={d._id}>{d.name} ({d.iqamaNumber})</option>)}
               </select>
             </div>

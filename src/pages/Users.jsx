@@ -52,11 +52,11 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
     name: '',
     email: '',
     password: '',
-    role: 'vendor'
+    role: 'vehicle'
   });
 
   const [permissions, setPermissions] = useState({
-    viewVendors: true,
+    viewVehicles: true,
     viewDrivers: true,
     createDispatch: false,
     editDispatch: false,
@@ -70,13 +70,13 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
   //       name: user.name || '',
   //       email: user.email || '',
   //       password: '',
-  //       role: user.role || 'vendor'
+  //       role: user.role || 'vehicle'
   //     });
   //     // Mock permissions based on role for UI demonstration
   //     updatePermissionsByRole(user.role);
   //   } else {
-  //     setFormData({ name: '', email: '', password: '', role: 'vendor' });
-  //     updatePermissionsByRole('vendor');
+  //     setFormData({ name: '', email: '', password: '', role: 'vehicle' });
+  //     updatePermissionsByRole('vehicle');
   //   }
   // }, [user]);
 
@@ -87,7 +87,7 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
       name: user.name || '',
       email: user.email || '',
       password: '',
-      role: user.role || 'vendor'
+      role: user.role || 'vehicle'
     });
     
     // Agar user ke pass database mein permissions hain toh wo use karein, 
@@ -98,24 +98,24 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
       updatePermissionsByRole(user.role);
     }
   } else {
-    setFormData({ name: '', email: '', password: '', role: 'vendor' });
-    updatePermissionsByRole('vendor');
+    setFormData({ name: '', email: '', password: '', role: 'vehicle' });
+    updatePermissionsByRole('vehicle');
   }
 }, [user]);
 
   const updatePermissionsByRole = (role) => {
     switch (role) {
       case 'super-admin':
-        setPermissions({ viewVendors: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: true });
+        setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: true });
         break;
       case 'admin':
-        setPermissions({ viewVendors: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: false });
+        setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: false });
         break;
       case 'viewer':
-        setPermissions({ viewVendors: true, viewDrivers: true, createDispatch: false, editDispatch: false, viewReports: true, manageUsers: false });
+        setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: false, editDispatch: false, viewReports: true, manageUsers: false });
         break;
       default:
-        setPermissions({ viewVendors: true, viewDrivers: true, createDispatch: false, editDispatch: false, viewReports: false, manageUsers: false });
+        setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: false, editDispatch: false, viewReports: false, manageUsers: false });
     }
   };
 
@@ -170,7 +170,7 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
                   <option value="super-admin">Super Admin (Root Access)</option>
                   <option value="admin">System Admin</option>
                   <option value="viewer">Data Viewer</option>
-                  <option value="vendor">Vendor User</option>
+                  <option value="vehicle">Vehicle User</option>
                 </select>
               </div>
             </div>
@@ -181,7 +181,7 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
               <Shield size={16} className="text-accent" /> Permission Matrix
             </h4>
             <div className="grid grid-cols-1 gap-3">
-              <PermissionItem icon={Building2} label="View Vendors" description="Access to vendor list and profiles" checked={permissions.viewVendors} onChange={() => setPermissions({...permissions, viewVendors: !permissions.viewVendors})} />
+              <PermissionItem icon={Building2} label="View Vehicles" description="Access to vehicle list and profiles" checked={permissions.viewVehicles} onChange={() => setPermissions({...permissions, viewVehicles: !permissions.viewVehicles})} />
               <PermissionItem icon={Truck} label="View Drivers" description="Access to fleet driver management" checked={permissions.viewDrivers} onChange={() => setPermissions({...permissions, viewDrivers: !permissions.viewDrivers})} />
               <PermissionItem icon={PlusCircle} label="Create Dispatch" description="Authority to issue new delivery notes" checked={permissions.createDispatch} onChange={() => setPermissions({...permissions, createDispatch: !permissions.createDispatch})} />
               <PermissionItem icon={ClipboardList} label="Edit Dispatch" description="Modify active or pending orders" checked={permissions.editDispatch} onChange={() => setPermissions({...permissions, editDispatch: !permissions.editDispatch})} />
@@ -223,8 +223,12 @@ const Users = () => {
   const handleSave = async (data) => {
     setActionLoading(true);
     try {
-      if (editingUser) await api.put(`/users/${editingUser._id}`, data);
-      else await api.post('/users', data);
+      if (editingUser) {
+        await api.put(`/users/${editingUser._id}`, data);
+      } else {
+        // Use the auth/register endpoint for creating new users
+        await api.post('/auth/register', data);
+      }
       fetchUsers();
       setModalOpen(false);
     } catch (error) {
