@@ -42,6 +42,9 @@ const DispatchOrders = () => {
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
   const [isOutForDeliveryModalOpen, setIsOutForDeliveryModalOpen] = useState(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [followDriver, setFollowDriver] = useState(true);
+  const mapRef = useRef(null);
+  const pollingRef = useRef(null);
   const [showCompletionQR, setShowCompletionQR] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
@@ -240,6 +243,37 @@ const DispatchOrders = () => {
       destination
     }));
   }, [vehicleLocations, isModalOpen, selectedOrder]);
+
+  useEffect(() => {
+    if (isTrackingModalOpen && selectedOrder?._id) {
+      // Polling start: Every 5 seconds
+      pollingRef.current = setInterval(async () => {
+        try {
+          const res = await api.get(`/dispatch/${selectedOrder._id}`);
+          const updatedOrder = res.data.data;
+          
+          setSelectedOrder(updatedOrder);
+
+          // Auto-center map if Follow Driver is on
+          if (followDriver && updatedOrder.currentLocation?.lat && mapRef.current) {
+            mapRef.current.setView(
+              [updatedOrder.currentLocation.lat, updatedOrder.currentLocation.lng], 
+              mapRef.current.getZoom(),
+              { animate: true }
+            );
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+        }
+      }, 5000);
+    } else {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    }
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [isTrackingModalOpen, selectedOrder?._id, followDriver]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -1322,6 +1356,7 @@ const DispatchOrders = () => {
                 center={[selectedOrder.currentLocation?.lat || 24.7136, selectedOrder.currentLocation?.lng || 46.6753]} 
                 zoom={13} 
                 style={{ height: '100%', width: '100%' }}
+                ref={mapRef}
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -1396,6 +1431,19 @@ const DispatchOrders = () => {
                     <p className="text-lg font-black text-primary">{selectedOrder.currentLocation?.timestamp ? new Date(selectedOrder.currentLocation.timestamp).toLocaleTimeString() : 'N/A'}</p>
                   </div>
                 </div>
+                
+                {/* Follow Driver Toggle */}
+                <button 
+                  onClick={() => setFollowDriver(!followDriver)}
+                  className={`px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-2xl ${
+                    followDriver 
+                      ? 'bg-primary text-white shadow-primary/30' 
+                      : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                  }`}
+                >
+                  <Navigation size={16} className={followDriver ? 'animate-pulse' : ''} />
+                  {followDriver ? 'Following Driver' : 'Follow Driver'}
+                </button>
                 <button 
                   onClick={handleCompleteTracking}
                   disabled={isUpdating}
