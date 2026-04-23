@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Search, Download, Eye, Loader2, Truck, FileDown, Plus, 
   X, Printer, CheckCircle2, Clock,
@@ -50,20 +50,20 @@ const DispatchOrders = () => {
   const pollingRef = useRef(null);
   
   // Create icons inside useMemo to avoid "Illegal constructor" or re-creation errors
-  const vehicleIcon = React.useMemo(() => new L.Icon({
-    iconUrl: VEHICLE_ICON_URL,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
-  }), []);
-
-  const defaultIcon = React.useMemo(() => new L.Icon({
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-  }), []);
+   const vehicleIcon = useMemo(() => new L.Icon({
+     iconUrl: VEHICLE_ICON_URL,
+     iconSize: [40, 40],
+     iconAnchor: [20, 20],
+     popupAnchor: [0, -20],
+   }), []);
+ 
+   const defaultIcon = useMemo(() => new L.Icon({
+     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+     iconSize: [25, 41],
+     iconAnchor: [12, 41],
+   }), []);
 
   const [showCompletionQR, setShowCompletionQR] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
