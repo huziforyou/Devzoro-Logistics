@@ -1041,33 +1041,21 @@ const DispatchOrders = () => {
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-gray-800 pb-3">QR Tracking</h3>
                   <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] border border-gray-100 dark:border-gray-800">
                     <QRCode 
-                      value={showCompletionQR 
-                        ? `${window.location.origin}/track/${selectedOrder.trackingId}?complete=true` 
-                        : `${window.location.origin}/track/${selectedOrder.trackingId}`} 
+                      value={`${window.location.origin}/track/${selectedOrder.trackingId}`} 
                       size={150}
                       level="H"
                       marginSize={4}
-                      className={`rounded-2xl border-4 shadow-lg mb-4 transition-all ${showCompletionQR ? 'border-green-500' : 'border-white'}`}
+                      className="rounded-2xl border-4 border-white shadow-lg mb-4 transition-all"
                     />
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
-                      {showCompletionQR ? 'Scan Completion QR to mark Delivered' : 'Scan to Track Live Location'}
+                      Scan to Start Tracking or Complete Delivery
                     </p>
                     <div className="flex gap-2 w-full mt-4">
                       <button 
                         onClick={() => setIsTrackingModalOpen(true)}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 text-primary dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-gray-100 dark:border-gray-800 hover:bg-gray-50 transition-all"
                       >
-                        <MapPin size={16} /> Map
-                      </button>
-                      <button 
-                        onClick={() => setShowCompletionQR(!showCompletionQR)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border transition-all ${
-                          showCompletionQR 
-                            ? 'bg-green-600 text-white border-green-700' 
-                            : 'bg-white dark:bg-gray-900 text-green-600 border-gray-100 dark:border-gray-800 hover:bg-green-50'
-                        }`}
-                      >
-                        <CheckCircle2 size={16} /> {showCompletionQR ? 'Show Start QR' : 'Complete QR'}
+                        <MapPin size={16} /> View Map
                       </button>
                     </div>
                   </div>

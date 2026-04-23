@@ -29,8 +29,6 @@ L.Icon.Default.mergeOptions({
 const TrackingPage = () => {
   const { trackingId } = useParams();
   const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const isCompletionScan = queryParams.get('complete') === 'true';
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,31 +48,26 @@ const TrackingPage = () => {
   }, [trackingId]);
 
   useEffect(() => {
-    if (isCompletionScan && order && order.status !== 'Delivered') {
-      handleAutoCompletion();
-    } else if (order && order.status !== 'Delivered' && !trackingActive) {
-      // Auto-start tracking on mount if not delivered
+    if (order && order.status === 'Pending' && !trackingActive) {
+      // Step 1: Start tracking if Pending
       startTracking();
+    } else if (order && order.status === 'In Transit') {
+      // Step 2: If In Transit, start tracking to keep live view
+      if (!trackingActive) startTracking();
+      
+      // Step 3: "Re-scan to Deliver" Logic
+      // If they scanned the QR again, we show the confirmation immediately
+      const hasConfirmed = localStorage.getItem(`delivered_confirm_${trackingId}`);
+      if (!hasConfirmed) {
+        setTimeout(() => {
+          if (window.confirm('📍 DESTINATION REACHED?\n\nYou are already In-Transit. Do you want to mark this order as DELIVERED now?')) {
+            localStorage.setItem(`delivered_confirm_${trackingId}`, 'true');
+            stopTracking();
+          }
+        }, 1500);
+      }
     }
-  }, [isCompletionScan, order]);
-
-  const handleAutoCompletion = async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          await api.put(`/dispatch/track/${trackingId}/complete`, {
-            lat: latitude,
-            lng: longitude
-          });
-          alert('Scan Successful: Delivery marked as Delivered!');
-          fetchTrackingDetails();
-        } catch (err) {
-          console.error('Auto-completion failed:', err);
-        }
-      });
-    }
-  };
+  }, [order]);
 
   const fetchTrackingDetails = async () => {
     try {
@@ -153,20 +146,28 @@ const TrackingPage = () => {
   };
 
   const stopTracking = async () => {
-    if (window.confirm('Are you sure you want to complete this delivery?')) {
+    if (window.confirm('Confirm Delivery: Have you reached the destination and delivered the items?')) {
       try {
         if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
         setTrackingActive(false);
         
+        // Use current position for completion
+        const pos = await new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+            () => resolve(currentPos)
+          );
+        });
+
         await api.put(`/dispatch/track/${trackingId}/complete`, {
-          lat: currentPos?.lat,
-          lng: currentPos?.lng
+          lat: pos?.lat,
+          lng: pos?.lng
         });
         
-        alert('Delivery completed successfully!');
+        alert('SUCCESS: Delivery marked as Delivered!');
         fetchTrackingDetails();
       } catch (err) {
-        alert('Failed to complete tracking');
+        alert('Error: Failed to mark as delivered');
       }
     }
   };
