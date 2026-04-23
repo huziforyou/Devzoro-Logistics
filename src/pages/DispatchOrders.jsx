@@ -27,12 +27,8 @@ import { io } from 'socket.io-client';
 import { applyTemplate, downloadPDF, generateDetailedDispatchOrderPDF, generatePDFReport } from '../utils/pdfHelper';
 import LogoImage from '../assets/devzoro-1.jpg';
 
-// Custom Vehicle Icon
-const vehicleIcon = L.icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20]
-});
+// Custom Vehicle Icon URL
+const VEHICLE_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png';
 
 const DispatchOrders = () => {
   const navigate = useNavigate();
@@ -52,6 +48,23 @@ const DispatchOrders = () => {
   const [followDriver, setFollowDriver] = useState(true);
   const mapRef = useRef(null);
   const pollingRef = useRef(null);
+  
+  // Create icons inside useMemo to avoid "Illegal constructor" or re-creation errors
+  const vehicleIcon = React.useMemo(() => new L.Icon({
+    iconUrl: VEHICLE_ICON_URL,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
+  }), []);
+
+  const defaultIcon = React.useMemo(() => new L.Icon({
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  }), []);
+
   const [showCompletionQR, setShowCompletionQR] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
@@ -1378,14 +1391,14 @@ const DispatchOrders = () => {
                 
                 {/* Loading Point */}
                 {selectedOrder.loadingCoords?.lat && (
-                  <Marker position={[selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng]}>
+                  <Marker position={[selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng]} icon={defaultIcon}>
                     <Popup>Loading Point: {selectedOrder.loadingFrom}</Popup>
                   </Marker>
                 )}
                 
                 {/* Offloading Point */}
                 {selectedOrder.offloadingCoords?.lat && (
-                  <Marker position={[selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]}>
+                  <Marker position={[selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]} icon={defaultIcon}>
                     <Popup>Offloading Point: {selectedOrder.offloadingTo}</Popup>
                   </Marker>
                 )}

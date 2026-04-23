@@ -26,12 +26,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom Vehicle Icon
-const vehicleIcon = L.icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20]
-});
+// Custom Vehicle Icon URL
+const VEHICLE_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png';
 
 const TrackingPage = () => {
   const { trackingId } = useParams();
@@ -46,6 +42,22 @@ const TrackingPage = () => {
   const [actualDistance, setActualDistance] = useState(0);
   const [trackingHistory, setTrackingHistory] = useState([]);
   const watchIdRef = useRef(null);
+
+  // Memoize icons to prevent re-creation
+  const vehicleIcon = React.useMemo(() => new L.Icon({
+    iconUrl: VEHICLE_ICON_URL,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
+  }), []);
+
+  const defaultIcon = React.useMemo(() => new L.Icon({
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  }), []);
 
   useEffect(() => {
     fetchTrackingDetails();
@@ -231,13 +243,13 @@ const TrackingPage = () => {
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             
             {order?.loadingCoords?.lat && (
-              <Marker position={[order.loadingCoords.lat, order.loadingCoords.lng]}>
+              <Marker position={[order.loadingCoords.lat, order.loadingCoords.lng]} icon={defaultIcon}>
                 <Popup>Loading Point</Popup>
               </Marker>
             )}
 
             {order?.offloadingCoords?.lat && (
-              <Marker position={[order.offloadingCoords.lat, order.offloadingCoords.lng]}>
+              <Marker position={[order.offloadingCoords.lat, order.offloadingCoords.lng]} icon={defaultIcon}>
                 <Popup>Offloading Point</Popup>
               </Marker>
             )}
