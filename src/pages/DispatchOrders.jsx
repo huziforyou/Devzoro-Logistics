@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { io } from 'socket.io-client';
+
 import { applyTemplate, downloadPDF, generateDetailedDispatchOrderPDF, generatePDFReport } from '../utils/pdfHelper';
 import LogoImage from '../assets/devzoro-1.jpg';
 
@@ -151,73 +151,6 @@ const DispatchOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-
-    // Disable Socket.io in production (Vercel) to avoid connection errors
-    if (import.meta.env.PROD) {
-      console.log('Socket.io disabled in production. Using polling for updates.');
-      return;
-    }
-
-    const socket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001', {
-      withCredentials: true,
-      transports: ['websocket', 'polling']
-    });
-
-    socket.on('dispatchCreated', (newOrder) => {
-      setOrders(prev => [newOrder, ...prev]);
-    });
-
-    socket.on('dispatchUpdated', (updatedOrder) => {
-      setOrders(prev => prev.map(order => 
-        order._id === updatedOrder._id ? updatedOrder : order
-      ));
-    });
-
-    socket.on('dispatchDeleted', (id) => {
-      setOrders(prev => prev.filter(order => order._id !== id));
-      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
-    });
-
-    socket.on('bulkDispatchDeleted', (ids) => {
-      setOrders(prev => prev.filter(order => !ids.includes(order._id)));
-      setSelectedIds(prev => prev.filter(id => !ids.includes(id)));
-    });
-
-    socket.on('bulkDispatchUpdated', (updatedOrders) => {
-      setOrders(prev => prev.map(order => {
-        const updated = updatedOrders.find(uo => uo._id === order._id);
-        return updated ? updated : order;
-      }));
-    });
-
-    socket.on('vehicleLocationUpdate', (payload) => {
-      if (!payload?.vehicleId || !payload?.location) return;
-      setVehicleLocations(prev => ({ ...prev, [payload.vehicleId]: payload.location }));
-    });
-
-    socket.on('trackingLocationUpdate', (payload) => {
-      if (!payload?.orderId || !payload?.location) return;
-      setOrders(prev => prev.map(order => 
-        order._id === payload.orderId ? { 
-          ...order, 
-          currentLocation: payload.location,
-          trackingHistory: payload.trackingHistory,
-          actualDistance: payload.actualDistance
-        } : order
-      ));
-      if (selectedOrder?._id === payload.orderId) {
-        setSelectedOrder(prev => ({ 
-          ...prev, 
-          currentLocation: payload.location,
-          trackingHistory: payload.trackingHistory,
-          actualDistance: payload.actualDistance
-        }));
-      }
-    });
-
-    return () => {
-      socket.disconnect();
-    };
   }, []);
 
   const haversineKm = (a, b) => {
@@ -269,6 +202,34 @@ const DispatchOrders = () => {
       destination
     }));
   }, [vehicleLocations, isModalOpen, selectedOrder]);
+
+  useEffect(() => {
+    if (!isTrackingModalOpen || !mapRef.current) return;
+    
+    const loading = selectedOrder?.loadingCoords;
+    const offloading = selectedOrder?.offloadingCoords;
+    const current = selectedOrder?.currentLocation;
+    
+    const validPoints = [];
+    
+    if (typeof loading?.lat === 'number' && typeof loading?.lng === 'number') {
+      validPoints.push([loading.lat, loading.lng]);
+    }
+    if (typeof offloading?.lat === 'number' && typeof offloading?.lng === 'number') {
+      validPoints.push([offloading.lat, offloading.lng]);
+    }
+    if (typeof current?.lat === 'number' && typeof current?.lng === 'number') {
+      validPoints.push([current.lat, current.lng]);
+    }
+    
+    if (validPoints.length >= 2) {
+      const bounds = L.latLngBounds(validPoints);
+      mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+    }
+  }, [isTrackingModalOpen, selectedOrder?._id, 
+      selectedOrder?.loadingCoords?.lat, selectedOrder?.loadingCoords?.lng,
+      selectedOrder?.offloadingCoords?.lat, selectedOrder?.offloadingCoords?.lng,
+      selectedOrder?.currentLocation?.lat, selectedOrder?.currentLocation?.lng]);
 
   useEffect(() => {
     if (isTrackingModalOpen && selectedOrder?._id) {
@@ -1390,21 +1351,21 @@ const DispatchOrders = () => {
                 />
                 
                 {/* Loading Point */}
-                {selectedOrder.loadingCoords?.lat && (
+                {typeof selectedOrder.loadingCoords?.lat === 'number' && typeof selectedOrder.loadingCoords?.lng === 'number' && (
                   <Marker position={[selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng]} icon={defaultIcon}>
                     <Popup>Loading Point: {selectedOrder.loadingFrom}</Popup>
                   </Marker>
                 )}
                 
                 {/* Offloading Point */}
-                {selectedOrder.offloadingCoords?.lat && (
+                {typeof selectedOrder.offloadingCoords?.lat === 'number' && typeof selectedOrder.offloadingCoords?.lng === 'number' && (
                   <Marker position={[selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]} icon={defaultIcon}>
                     <Popup>Offloading Point: {selectedOrder.offloadingTo}</Popup>
                   </Marker>
                 )}
 
                 {/* Current Location - Vehicle Icon */}
-                {selectedOrder.currentLocation?.lat && (
+                {typeof selectedOrder.currentLocation?.lat === 'number' && typeof selectedOrder.currentLocation?.lng === 'number' && (
                   <Marker 
                     position={[selectedOrder.currentLocation.lat, selectedOrder.currentLocation.lng]}
                     icon={vehicleIcon}
@@ -1414,7 +1375,7 @@ const DispatchOrders = () => {
                 )}
 
                 {/* Breadcrumb Trail (Tracking History) - Solid Blue Line */}
-                {selectedOrder.trackingHistory && selectedOrder.trackingHistory.length > 1 && (
+                {Array.isArray(selectedOrder.trackingHistory) && selectedOrder.trackingHistory.length > 1 && (
                   <Polyline 
                     positions={selectedOrder.trackingHistory.map(h => [h.lat, h.lng])} 
                     color="#0066FF"
@@ -1424,7 +1385,8 @@ const DispatchOrders = () => {
                 )}
 
                 {/* Planned Route Line (Dashed) */}
-                {selectedOrder.loadingCoords?.lat && selectedOrder.offloadingCoords?.lat && (
+                {typeof selectedOrder.loadingCoords?.lat === 'number' && typeof selectedOrder.loadingCoords?.lng === 'number' &&
+                 typeof selectedOrder.offloadingCoords?.lat === 'number' && typeof selectedOrder.offloadingCoords?.lng === 'number' && (
                   <Polyline 
                     positions={[
                       [selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng],
