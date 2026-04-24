@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Search, Download, Eye, Loader2, Truck, FileDown, Plus, 
   X, Printer, CheckCircle2, Clock, Navigation,
-  ArrowRight, Trash2, Edit2, Upload, FileText, Calendar, Timer,
+  ArrowRight, ArrowLeft, Trash2, Edit2, Upload, FileText, Calendar, Timer,
   QrCode, MapPin, ExternalLink
 } from 'lucide-react';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
@@ -657,6 +657,12 @@ const DispatchOrders = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="w-full lg:w-auto">
+          <button 
+            onClick={() => navigate('/dispatch')} 
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 hover:text-primary transition-colors group"
+          >
+            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Dispatch List
+          </button>
           <h1 className="text-2xl md:text-3xl font-black text-primary dark:text-white uppercase tracking-tight">
             Logistics Control
           </h1>
@@ -988,10 +994,13 @@ const DispatchOrders = () => {
 
       {/* --- QUICK VIEW MODAL --- */}
       {isModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}
+        >
           <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200 relative">
             {/* Modal Header */}
-            <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 relative">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                   <FileText size={28} />
@@ -1179,7 +1188,10 @@ const DispatchOrders = () => {
 
       {/* --- OUT FOR DELIVERY MODAL --- */}
       {isOutForDeliveryModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsOutForDeliveryModalOpen(false); }}
+        >
           <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
             <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-primary text-white">
               <h3 className="text-xl font-black uppercase tracking-tight">Out For Delivery</h3>
@@ -1232,7 +1244,10 @@ const DispatchOrders = () => {
 
       {/* --- DELIVERY CONFIRMATION MODAL --- */}
       {isDeliveryModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsDeliveryModalOpen(false); }}
+        >
           <div className="bg-white dark:bg-gray-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
             <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-green-600 text-white">
               <h3 className="text-xl font-black uppercase tracking-tight">{isEditingDelivery ? 'Edit Delivery Info' : 'Confirm Delivery'}</h3>
@@ -1343,7 +1358,10 @@ const DispatchOrders = () => {
 
       {/* --- LIVE TRACKING MODAL --- */}
       {isTrackingModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        <div 
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsTrackingModalOpen(false); }}
+        >
           <div className="bg-white dark:bg-gray-900 w-full max-w-4xl h-[80vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
             <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
               <div>
