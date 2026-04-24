@@ -26,8 +26,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom Vehicle Icon URL
-const VEHICLE_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png';
+// Custom Icons Definition (Outside component to avoid Illegal Constructor error)
+const truckIcon = L.icon({ 
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', 
+  iconSize: [35, 35], 
+  iconAnchor: [17, 17], 
+  popupAnchor: [0, -17],
+});
+
+const defaultIcon = L.icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 const TrackingPage = () => {
   const { trackingId } = useParams();
@@ -42,22 +57,6 @@ const TrackingPage = () => {
   const [actualDistance, setActualDistance] = useState(0);
   const [trackingHistory, setTrackingHistory] = useState([]);
   const watchIdRef = useRef(null);
-
-  // Memoize icons to prevent re-creation
-   const vehicleIcon = useMemo(() => new L.Icon({
-     iconUrl: VEHICLE_ICON_URL,
-     iconSize: [40, 40],
-     iconAnchor: [20, 20],
-     popupAnchor: [0, -20],
-   }), []);
- 
-   const defaultIcon = useMemo(() => new L.Icon({
-     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-     iconSize: [25, 41],
-     iconAnchor: [12, 41],
-   }), []);
 
   useEffect(() => {
     fetchTrackingDetails();
@@ -257,9 +256,9 @@ const TrackingPage = () => {
             {currentPos && (
               <Marker 
                 position={[currentPos.lat, currentPos.lng]}
-                icon={vehicleIcon}
+                icon={truckIcon}
               >
-                <Popup>Your Location</Popup>
+                <Popup>Your current location (Live)</Popup>
               </Marker>
             )}
 

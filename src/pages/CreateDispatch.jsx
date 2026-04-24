@@ -98,7 +98,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom Icons for Loading and Offloading
-const loadingIcon = new L.Icon({
+const loadingIcon = L.icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41],
@@ -107,7 +107,7 @@ const loadingIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const offloadingIcon = new L.Icon({
+const offloadingIcon = L.icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41],

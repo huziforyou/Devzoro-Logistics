@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Search, Download, Eye, Loader2, Truck, FileDown, Plus, 
-  X, Printer, CheckCircle2, Clock,
+  X, Printer, CheckCircle2, Clock, Navigation,
   ArrowRight, Trash2, Edit2, Upload, FileText, Calendar, Timer,
   QrCode, MapPin, ExternalLink
 } from 'lucide-react';
@@ -27,8 +27,23 @@ import * as XLSX from 'xlsx';
 import { applyTemplate, downloadPDF, generateDetailedDispatchOrderPDF, generatePDFReport } from '../utils/pdfHelper';
 import LogoImage from '../assets/devzoro-1.jpg';
 
-// Custom Vehicle Icon URL
-const VEHICLE_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png';
+// Custom Icons Definition (Outside component to avoid Illegal Constructor error)
+const truckIcon = L.icon({ 
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', 
+  iconSize: [35, 35], 
+  iconAnchor: [17, 17], 
+  popupAnchor: [0, -17],
+});
+
+const defaultIcon = L.icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 const DispatchOrders = () => {
   const navigate = useNavigate();
@@ -49,22 +64,6 @@ const DispatchOrders = () => {
   const mapRef = useRef(null);
   const pollingRef = useRef(null);
   
-  // Create icons inside useMemo to avoid "Illegal constructor" or re-creation errors
-   const vehicleIcon = useMemo(() => new L.Icon({
-     iconUrl: VEHICLE_ICON_URL,
-     iconSize: [40, 40],
-     iconAnchor: [20, 20],
-     popupAnchor: [0, -20],
-   }), []);
- 
-   const defaultIcon = useMemo(() => new L.Icon({
-     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-     iconSize: [25, 41],
-     iconAnchor: [12, 41],
-   }), []);
-
   const [showCompletionQR, setShowCompletionQR] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
@@ -1339,103 +1338,114 @@ const DispatchOrders = () => {
             </div>
             
             <div className="flex-1 relative">
-              <MapContainer 
-                center={[selectedOrder.currentLocation?.lat || 24.7136, selectedOrder.currentLocation?.lng || 46.6753]} 
-                zoom={13} 
-                style={{ height: '100%', width: '100%' }}
-                ref={mapRef}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                
-                {/* Loading Point */}
-                {typeof selectedOrder.loadingCoords?.lat === 'number' && typeof selectedOrder.loadingCoords?.lng === 'number' && (
-                  <Marker position={[selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng]} icon={defaultIcon}>
-                    <Popup>Loading Point: {selectedOrder.loadingFrom}</Popup>
-                  </Marker>
-                )}
-                
-                {/* Offloading Point */}
-                {typeof selectedOrder.offloadingCoords?.lat === 'number' && typeof selectedOrder.offloadingCoords?.lng === 'number' && (
-                  <Marker position={[selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]} icon={defaultIcon}>
-                    <Popup>Offloading Point: {selectedOrder.offloadingTo}</Popup>
-                  </Marker>
-                )}
-
-                {/* Current Location - Vehicle Icon */}
-                {typeof selectedOrder.currentLocation?.lat === 'number' && typeof selectedOrder.currentLocation?.lng === 'number' && (
-                  <Marker 
-                    position={[selectedOrder.currentLocation.lat, selectedOrder.currentLocation.lng]}
-                    icon={vehicleIcon}
-                  >
-                    <Popup>Live Position: {selectedOrder.assignedVehicle?.plateNumber}</Popup>
-                  </Marker>
-                )}
-
-                {/* Breadcrumb Trail (Tracking History) - Solid Blue Line */}
-                {Array.isArray(selectedOrder.trackingHistory) && selectedOrder.trackingHistory.length > 1 && (
-                  <Polyline 
-                    positions={selectedOrder.trackingHistory.map(h => [h.lat, h.lng])} 
-                    color="#0066FF"
-                    weight={5}
-                    opacity={0.9}
-                  />
-                )}
-
-                {/* Planned Route Line (Dashed) */}
-                {typeof selectedOrder.loadingCoords?.lat === 'number' && typeof selectedOrder.loadingCoords?.lng === 'number' &&
-                 typeof selectedOrder.offloadingCoords?.lat === 'number' && typeof selectedOrder.offloadingCoords?.lng === 'number' && (
-                  <Polyline 
-                    positions={[
-                      [selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng],
-                      [selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]
-                    ]} 
-                    color="#666666"
-                    dashArray="10, 10"
-                    opacity={0.4}
-                  />
-                )}
-              </MapContainer>
-
-              {/* Stats Overlay */}
-              <div className="absolute bottom-8 left-8 right-8 flex gap-4 z-[1000]">
-                <div className="flex-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/20 grid grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Actual Distance</p>
-                    <p className="text-lg font-black text-primary">{(selectedOrder.actualDistance || 0).toFixed(2)} km</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                    <p className="text-lg font-black text-accent uppercase">{selectedOrder.status}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Update</p>
-                    <p className="text-lg font-black text-primary">{selectedOrder.currentLocation?.timestamp ? new Date(selectedOrder.currentLocation.timestamp).toLocaleTimeString() : 'N/A'}</p>
+              {!selectedOrder ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                  <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="animate-spin text-primary" size={40} />
+                    <p className="text-sm font-black uppercase tracking-widest text-gray-400">Loading Tracking Data...</p>
                   </div>
                 </div>
-                
-                {/* Follow Driver Toggle */}
-                <button 
-                  onClick={() => setFollowDriver(!followDriver)}
-                  className={`px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-2xl ${
-                    followDriver 
-                      ? 'bg-primary text-white shadow-primary/30' 
-                      : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
-                  }`}
+              ) : (
+                <MapContainer 
+                  center={[selectedOrder.currentLocation?.lat || 24.7136, selectedOrder.currentLocation?.lng || 46.6753]} 
+                  zoom={13} 
+                  style={{ height: '100%', width: '100%' }}
+                  ref={mapRef}
                 >
-                  <Navigation size={16} className={followDriver ? 'animate-pulse' : ''} />
-                  {followDriver ? 'Following Driver' : 'Follow Driver'}
-                </button>
-                <button 
-                  onClick={handleCompleteTracking}
-                  disabled={isUpdating}
-                  className="px-10 bg-green-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-green-700 transition-all disabled:opacity-50"
-                >
-                  {isUpdating ? <Loader2 className="animate-spin" /> : 'Complete Tracking'}
-                </button>
-              </div>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  
+                  {/* Loading Point */}
+                  {typeof selectedOrder.loadingCoords?.lat === 'number' && typeof selectedOrder.loadingCoords?.lng === 'number' && (
+                    <Marker position={[selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng]} icon={defaultIcon}>
+                      <Popup>Loading Point: {selectedOrder.loadingFrom}</Popup>
+                    </Marker>
+                  )}
+                  
+                  {/* Offloading Point */}
+                  {typeof selectedOrder.offloadingCoords?.lat === 'number' && typeof selectedOrder.offloadingCoords?.lng === 'number' && (
+                    <Marker position={[selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]} icon={defaultIcon}>
+                      <Popup>Offloading Point: {selectedOrder.offloadingTo}</Popup>
+                    </Marker>
+                  )}
+
+                  {/* Current Location - Vehicle Icon */}
+                  {typeof selectedOrder.currentLocation?.lat === 'number' && typeof selectedOrder.currentLocation?.lng === 'number' && (
+                    <Marker 
+                      position={[selectedOrder.currentLocation.lat, selectedOrder.currentLocation.lng]}
+                      icon={truckIcon}
+                    >
+                      <Popup>Live Position: {selectedOrder.assignedVehicle?.plateNumber}</Popup>
+                    </Marker>
+                  )}
+
+                  {/* Breadcrumb Trail (Tracking History) - Solid Blue Line */}
+                  {Array.isArray(selectedOrder.trackingHistory) && selectedOrder.trackingHistory.length > 1 && (
+                    <Polyline 
+                      positions={selectedOrder.trackingHistory.map(h => [h.lat, h.lng])} 
+                      color="#0066FF"
+                      weight={5}
+                      opacity={0.9}
+                    />
+                  )}
+
+                  {/* Planned Route Line (Dashed) */}
+                  {typeof selectedOrder.loadingCoords?.lat === 'number' && typeof selectedOrder.loadingCoords?.lng === 'number' &&
+                   typeof selectedOrder.offloadingCoords?.lat === 'number' && typeof selectedOrder.offloadingCoords?.lng === 'number' && (
+                    <Polyline 
+                      positions={[
+                        [selectedOrder.loadingCoords.lat, selectedOrder.loadingCoords.lng],
+                        [selectedOrder.offloadingCoords.lat, selectedOrder.offloadingCoords.lng]
+                      ]} 
+                      color="#666666"
+                      dashArray="10, 10"
+                      opacity={0.4}
+                    />
+                  )}
+                </MapContainer>
+              )}
+
+              {/* Stats Overlay */}
+              {selectedOrder && (
+                <div className="absolute bottom-8 left-8 right-8 flex gap-4 z-[1000]">
+                  <div className="flex-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/20 grid grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Actual Distance</p>
+                      <p className="text-lg font-black text-primary">{(selectedOrder.actualDistance || 0).toFixed(2)} km</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                      <p className="text-lg font-black text-accent uppercase">{selectedOrder.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Update</p>
+                      <p className="text-lg font-black text-primary">{selectedOrder.currentLocation?.timestamp ? new Date(selectedOrder.currentLocation.timestamp).toLocaleTimeString() : 'N/A'}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Follow Driver Toggle */}
+                  <button 
+                    onClick={() => setFollowDriver(!followDriver)}
+                    className={`px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-2xl ${
+                      followDriver 
+                        ? 'bg-primary text-white shadow-primary/30' 
+                        : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                    }`}
+                  >
+                    <Navigation size={16} className={followDriver ? 'animate-pulse' : ''} />
+                    {followDriver ? 'Following Driver' : 'Follow Driver'}
+                  </button>
+                  <button 
+                    onClick={handleCompleteTracking}
+                    disabled={isUpdating}
+                    className="px-10 bg-green-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-green-700 transition-all disabled:opacity-50"
+                  >
+                    {isUpdating ? <Loader2 className="animate-spin" /> : 'Complete Tracking'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
