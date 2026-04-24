@@ -148,6 +148,20 @@ const DispatchOrders = () => {
 
   const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
 
+  // Keyboard Support: Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsTrackingModalOpen(false);
+        setIsModalOpen(false);
+        setIsOutForDeliveryModalOpen(false);
+        setIsDeliveryModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -1359,25 +1373,45 @@ const DispatchOrders = () => {
       {/* --- LIVE TRACKING MODAL --- */}
       {isTrackingModalOpen && selectedOrder && (
         <div 
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-md"
           onClick={(e) => { if (e.target === e.currentTarget) setIsTrackingModalOpen(false); }}
         >
-          <div className="bg-white dark:bg-gray-900 w-full max-w-4xl h-[80vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-primary">Live Route Tracking</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Vehicle: {selectedOrder.assignedVehicle?.plateNumber} | Driver: {selectedOrder.assignedDriver?.fullName}</p>
+          <div className="bg-white dark:bg-gray-900 w-full md:max-w-5xl h-full md:h-[90vh] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col relative">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-[1001] p-4 md:p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setIsTrackingModalOpen(false)} 
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl text-xs font-bold transition-all group"
+                >
+                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm md:text-xl font-black uppercase tracking-tight text-primary">Route Journey & Live Tracking</h3>
+                    {selectedOrder.status === 'Out for Delivery' && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-[8px] font-black uppercase animate-pulse">
+                        <span className="w-1 h-1 bg-red-600 rounded-full" />
+                        Live
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 md:mt-1">
+                    Vehicle: {selectedOrder.assignedVehicle?.plateNumber} | Driver: {selectedOrder.assignedDriver?.fullName}
+                  </p>
+                </div>
               </div>
               <button 
                 onClick={() => setIsTrackingModalOpen(false)}
-                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group"
+                className="p-2 md:p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group"
                 aria-label="Close"
               >
                 <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
               </button>
             </div>
             
-            <div className="flex-1 relative">
+            <div className="flex-1 relative overflow-hidden">
               {!selectedOrder ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                   <div className="flex flex-col items-center gap-4">
@@ -1449,47 +1483,49 @@ const DispatchOrders = () => {
 
               {/* Stats Overlay */}
               {selectedOrder && (
-                <div className="absolute bottom-8 left-8 right-8 flex gap-4 z-[1000]">
-                  <div className="flex-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/20 grid grid-cols-3 gap-6">
+                <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 right-4 md:right-8 flex flex-col md:flex-row gap-3 md:gap-4 z-[1000]">
+                  <div className="flex-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-2xl border border-white/20 grid grid-cols-3 gap-2 md:gap-6">
                     <div>
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Actual Distance</p>
-                      <p className="text-lg font-black text-primary">{(selectedOrder.actualDistance || 0).toFixed(2)} km</p>
+                      <p className="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1">Actual Distance</p>
+                      <p className="text-xs md:text-lg font-black text-primary">{(selectedOrder.actualDistance || 0).toFixed(2)} km</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                      <p className="text-lg font-black text-accent uppercase">{selectedOrder.status}</p>
+                      <p className="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1">Status</p>
+                      <p className="text-xs md:text-lg font-black text-accent uppercase">{selectedOrder.status}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Update</p>
-                      <p className="text-lg font-black text-primary">{selectedOrder.currentLocation?.timestamp ? new Date(selectedOrder.currentLocation.timestamp).toLocaleTimeString() : 'N/A'}</p>
+                      <p className="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1">Last Update</p>
+                      <p className="text-xs md:text-lg font-black text-primary truncate">{selectedOrder.currentLocation?.timestamp ? new Date(selectedOrder.currentLocation.timestamp).toLocaleTimeString() : 'N/A'}</p>
                     </div>
                   </div>
                   
-                  {/* Follow Driver Toggle */}
-                  <button 
-                    onClick={() => setFollowDriver(!followDriver)}
-                    className={`px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-2xl ${
-                      followDriver 
-                        ? 'bg-primary text-white shadow-primary/30' 
-                        : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
-                    }`}
-                  >
-                    <Navigation size={16} className={followDriver ? 'animate-pulse' : ''} />
-                    {followDriver ? 'Following Driver' : 'Follow Driver'}
-                  </button>
-                  <button 
-                    onClick={handleCompleteTracking}
-                    disabled={isUpdating}
-                    className="px-10 bg-green-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-green-700 transition-all disabled:opacity-50"
-                  >
-                    {isUpdating ? <Loader2 className="animate-spin" /> : 'Complete Tracking'}
-                  </button>
-                  <button 
-                    onClick={() => setIsTrackingModalOpen(false)}
-                    className="px-6 bg-red-500 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-red-600 transition-all"
-                  >
-                    Close
-                  </button>
+                  <div className="flex gap-2 md:gap-4">
+                    {/* Follow Driver Toggle */}
+                    <button 
+                      onClick={() => setFollowDriver(!followDriver)}
+                      className={`flex-1 md:flex-none px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-3xl text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-2xl ${
+                        followDriver 
+                          ? 'bg-primary text-white shadow-primary/30' 
+                          : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'
+                      }`}
+                    >
+                      <Navigation size={14} className={followDriver ? 'animate-pulse' : ''} />
+                      <span className="whitespace-nowrap">{followDriver ? 'Following' : 'Follow'}</span>
+                    </button>
+                    <button 
+                      onClick={handleCompleteTracking}
+                      disabled={isUpdating}
+                      className="flex-1 md:flex-none px-6 md:px-10 bg-green-600 text-white rounded-xl md:rounded-3xl font-black uppercase tracking-widest text-[8px] md:text-[10px] shadow-2xl hover:bg-green-700 transition-all disabled:opacity-50"
+                    >
+                      {isUpdating ? <Loader2 className="animate-spin" /> : 'Complete'}
+                    </button>
+                    <button 
+                      onClick={() => setIsTrackingModalOpen(false)}
+                      className="px-4 md:px-6 bg-red-500 text-white rounded-xl md:rounded-3xl font-black uppercase tracking-widest text-[8px] md:text-[10px] shadow-2xl hover:bg-red-600 transition-all"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
