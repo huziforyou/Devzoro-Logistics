@@ -988,8 +988,8 @@ const DispatchOrders = () => {
 
       {/* --- QUICK VIEW MODAL --- */}
       {isModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200 relative">
             {/* Modal Header */}
             <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
               <div className="flex items-center gap-4">
@@ -1003,9 +1003,10 @@ const DispatchOrders = () => {
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all"
+                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group"
+                aria-label="Close"
               >
-                <X size={24} />
+                <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
               </button>
             </div>
 
@@ -1174,7 +1175,13 @@ const DispatchOrders = () => {
           <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
             <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-primary text-white">
               <h3 className="text-xl font-black uppercase tracking-tight">Out For Delivery</h3>
-              <button onClick={() => setIsOutForDeliveryModalOpen(false)}><X size={24}/></button>
+              <button 
+                onClick={() => setIsOutForDeliveryModalOpen(false)}
+                className="p-2 hover:bg-white/20 rounded-xl transition-all group"
+                aria-label="Close"
+              >
+                <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
+              </button>
             </div>
             <form onSubmit={handleOutForDelivery} className="p-8 space-y-6">
               <div className="space-y-2">
@@ -1221,7 +1228,13 @@ const DispatchOrders = () => {
           <div className="bg-white dark:bg-gray-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
             <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-green-600 text-white">
               <h3 className="text-xl font-black uppercase tracking-tight">{isEditingDelivery ? 'Edit Delivery Info' : 'Confirm Delivery'}</h3>
-              <button onClick={() => setIsDeliveryModalOpen(false)}><X size={24}/></button>
+              <button 
+                onClick={() => setIsDeliveryModalOpen(false)}
+                className="p-2 hover:bg-white/20 rounded-xl transition-all group"
+                aria-label="Close"
+              >
+                <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
+              </button>
             </div>
             <form onSubmit={handleDeliveredSubmit} className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -1331,9 +1344,10 @@ const DispatchOrders = () => {
               </div>
               <button 
                 onClick={() => setIsTrackingModalOpen(false)}
-                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all"
+                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group"
+                aria-label="Close"
               >
-                <X size={24} />
+                <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
               </button>
             </div>
             
