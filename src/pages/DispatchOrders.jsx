@@ -1009,132 +1009,136 @@ const DispatchOrders = () => {
       {/* --- QUICK VIEW MODAL --- */}
       {isModalOpen && selectedOrder && (
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
           onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}
         >
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200 relative">
+          <div className="bg-white dark:bg-gray-900 w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] md:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200 relative flex flex-col">
             {/* Modal Header */}
-            <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 relative">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                  <FileText size={28} />
+            <div className="p-4 md:p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 relative sticky top-0 z-10 backdrop-blur-sm">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center text-primary">
+                  <FileText size={24} className="md:w-7 md:h-7" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black uppercase text-primary tracking-tight">Order Details</h2>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">DN: {selectedOrder.deliveryNoteNumber}</p>
+                  <h2 className="text-lg md:text-2xl font-black uppercase text-primary tracking-tight">Order Details</h2>
+                  <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">DN: {selectedOrder.deliveryNoteNumber}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group"
+                className="p-2 md:p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl md:rounded-2xl transition-all group"
                 aria-label="Close"
               >
-                <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
+                <X size={20} className="md:w-6 md:h-6 group-hover:rotate-90 transition-transform duration-200" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-10 space-y-10">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 md:space-y-10 custom-scrollbar">
               {/* Route & Status Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
                 <div className="space-y-6">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-gray-800 pb-3">Route Journey</h3>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 dark:border-gray-800">
                     <div className="flex flex-col items-center py-1">
                       <div className="w-3 h-3 rounded-full border-2 border-primary bg-white dark:bg-gray-900" />
                       <div className="w-[2px] flex-1 bg-gradient-to-b from-primary to-accent my-1" />
                       <div className="w-3 h-3 rounded-full border-2 border-accent bg-white dark:bg-gray-900" />
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-6 flex-1">
                       <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Loading Point</p>
-                        <p className="font-bold text-gray-800 dark:text-gray-200">{selectedOrder.loadingFrom}</p>
+                        <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-1">Loading Point</p>
+                        <p className="font-bold text-sm md:text-base text-gray-800 dark:text-gray-200">{selectedOrder.loadingFrom}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Offloading Point</p>
-                        <p className="font-bold text-gray-800 dark:text-gray-200">{selectedOrder.offloadingTo}</p>
+                        <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-1">Offloading Point</p>
+                        <p className="font-bold text-sm md:text-base text-gray-800 dark:text-gray-200">{selectedOrder.offloadingTo}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800">
+                  <div className="bg-white dark:bg-gray-900 p-5 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Live Distance & ETA</h3>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Remaining Distance</p>
-                        <p className="text-lg font-black text-primary dark:text-white">
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-2xl">
+                        <p className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Distance</p>
+                        <p className="text-base md:text-lg font-black text-primary dark:text-white">
                           {etaInfo?.distanceKm != null ? `${etaInfo.distanceKm} km` : 'N/A'}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Estimated Time</p>
-                        <p className="text-lg font-black text-primary dark:text-white">
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-2xl">
+                        <p className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">ETA</p>
+                        <p className="text-base md:text-lg font-black text-primary dark:text-white">
                           {etaInfo?.etaMinutes != null ? `${etaInfo.etaMinutes} min` : 'N/A'}
                         </p>
                       </div>
                     </div>
                     {etaInfo?.reason && (
-                      <p className="mt-4 text-[9px] font-bold uppercase tracking-widest text-gray-400">
-                        {etaInfo.reason}
-                      </p>
+                      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                          {etaInfo.reason}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-gray-800 pb-3">QR Tracking</h3>
-                  <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] border border-gray-100 dark:border-gray-800">
-                    <QRCode 
-                      value={`${window.location.origin}/track/${selectedOrder.trackingId}`} 
-                      size={150}
-                      level="H"
-                      marginSize={4}
-                      className="rounded-2xl border-4 border-white shadow-lg mb-4 transition-all"
-                    />
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
+                  <div className="flex flex-col items-center justify-center p-6 md:p-8 bg-gray-50 dark:bg-gray-800/50 rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 dark:border-gray-800">
+                    <div className="bg-white p-4 rounded-3xl shadow-xl mb-4">
+                      <QRCode 
+                        value={`${window.location.origin}/track/${selectedOrder.trackingId}`} 
+                        size={140}
+                        level="H"
+                        marginSize={2}
+                        className="transition-all"
+                      />
+                    </div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center max-w-[200px] leading-relaxed">
                       Scan to Start Tracking or Complete Delivery
                     </p>
-                    <div className="flex gap-2 w-full mt-4">
+                    <div className="flex gap-2 w-full mt-6">
                       <button 
                         onClick={() => setIsTrackingModalOpen(true)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 text-primary dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-gray-100 dark:border-gray-800 hover:bg-gray-50 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white dark:bg-gray-900 text-primary dark:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all group"
                       >
-                        <MapPin size={16} /> View Map
+                        <MapPin size={16} className="group-hover:scale-110 transition-transform" /> View Live Map
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Vehicle</p>
-                      <p className="font-bold text-gray-800 dark:text-gray-200">{selectedOrder.assignedVehicle?.plateNumber}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl">
+                      <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-1">Vehicle</p>
+                      <p className="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">{selectedOrder.assignedVehicle?.plateNumber}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Driver</p>
-                      <p className="font-bold text-gray-800 dark:text-gray-200">{selectedOrder.assignedDriver?.fullName}</p>
+                    <div className="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl">
+                      <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-1">Driver</p>
+                      <p className="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">{selectedOrder.assignedDriver?.fullName}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Status & Actions */}
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 dark:border-gray-700">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Current Logistics Status</p>
-                    <div className="flex items-center gap-3">
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Logistics Status</p>
+                    <div className="flex items-center justify-center md:justify-start gap-3">
                       <div className={`w-3 h-3 rounded-full animate-pulse ${
-                        selectedOrder.status === 'Delivered' ? 'bg-green-500' : 'bg-amber-500'
+                        selectedOrder.status === 'Delivered' ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.5)]' : 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]'
                       }`} />
-                      <span className="text-xl font-black text-gray-800 dark:text-white uppercase">{selectedOrder.status}</span>
+                      <span className="text-lg md:text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">{selectedOrder.status}</span>
                     </div>
                   </div>
                   
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
                     {selectedOrder.status === 'Pending' && (
                       <button 
                         onClick={() => setIsOutForDeliveryModalOpen(true)}
                         disabled={isUpdating}
-                        className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                       >
                         {isUpdating ? <Loader2 className="animate-spin" size={16}/> : <Truck size={18}/>}
                         Out For Delivery
@@ -1148,7 +1152,7 @@ const DispatchOrders = () => {
                           setIsDeliveryModalOpen(true);
                         }}
                         disabled={isUpdating}
-                        className="flex items-center gap-2 px-8 py-4 bg-green-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-green-600/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-green-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-green-600/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                       >
                         {isUpdating ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle2 size={18}/>}
                         Confirm Delivery
@@ -1156,18 +1160,18 @@ const DispatchOrders = () => {
                     )}
 
                     {selectedOrder.status === 'Delivered' && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 w-full md:w-auto">
                         <button 
                           onClick={() => handleEditDelivery(selectedOrder)}
-                          className="flex items-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all"
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all"
                         >
-                          <Edit2 size={18}/> Edit Delivery
+                          <Edit2 size={18}/> Edit
                         </button>
                         <button 
                           onClick={() => handleViewDeliveryNote(selectedOrder)}
-                          className="flex items-center gap-2 px-6 py-4 bg-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-accent/20 hover:scale-105 active:scale-95 transition-all"
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-accent/20 hover:scale-105 active:scale-95 transition-all"
                         >
-                          <FileText size={18}/> View Note
+                          <FileText size={18}/> Note
                         </button>
                       </div>
                     )}
@@ -1177,16 +1181,17 @@ const DispatchOrders = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-6">
+            <div className="p-6 md:p-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col md:flex-row justify-between items-center gap-4 sticky bottom-0 z-10 backdrop-blur-sm">
+              <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 w-full md:w-auto">
                 <button 
                   onClick={() => generatePDF(selectedOrder)}
-                  className="flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-all"
+                  className="flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-all bg-white dark:bg-gray-900 md:bg-transparent rounded-xl md:rounded-none w-full md:w-auto justify-center"
                 >
                   <Printer size={18} /> Print Manifest
                 </button>
-                <p className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Last Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
+                <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-700 hidden md:block" />
+                <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
                 </p>
               </div>
               <button 
