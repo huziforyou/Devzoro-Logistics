@@ -1154,16 +1154,24 @@ const DispatchOrders = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+            <div className="p-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => generatePDF(selectedOrder)}
+                  className="flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-all"
+                >
+                  <Printer size={18} /> Print Manifest
+                </button>
+                <p className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Last Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
+                </p>
+              </div>
               <button 
-                onClick={() => generatePDF(selectedOrder)}
-                className="flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-all"
+                onClick={() => setIsModalOpen(false)}
+                className="w-full md:w-auto px-10 py-4 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-300 dark:hover:bg-gray-700 transition-all shadow-lg"
               >
-                <Printer size={18} /> Print Manifest
+                Close Details
               </button>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Last Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
-              </p>
             </div>
           </div>
         </div>
@@ -1457,6 +1465,12 @@ const DispatchOrders = () => {
                     className="px-10 bg-green-600 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-green-700 transition-all disabled:opacity-50"
                   >
                     {isUpdating ? <Loader2 className="animate-spin" /> : 'Complete Tracking'}
+                  </button>
+                  <button 
+                    onClick={() => setIsTrackingModalOpen(false)}
+                    className="px-6 bg-red-500 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:bg-red-600 transition-all"
+                  >
+                    Close
                   </button>
                 </div>
               )}
