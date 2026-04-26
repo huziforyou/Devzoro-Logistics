@@ -408,6 +408,8 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
 const Drivers = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const canManageDrivers = isAdmin || user?.permissions?.manageDrivers;
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -527,7 +529,7 @@ const Drivers = () => {
           >
             <FileDown size={18} /> Export PDF
           </button>
-          {(user?.role === 'admin' || user?.role === 'super-admin') && (
+          {canManageDrivers && (
             <button onClick={() => { setEditingDriver(null); setModalOpen(true); }} className="btn-primary px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 flex items-center gap-2 hover:scale-[1.02] transition-all">
               <Plus size={20} /> Add New Driver
             </button>
@@ -572,8 +574,10 @@ const Drivers = () => {
                   <User size={28} />
                 </div>
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <button onClick={(e) => { e.stopPropagation(); setEditingDriver(driver); setModalOpen(true); }} className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
-                  {(user?.role === 'admin' || user?.role === 'super-admin') && (
+                  {canManageDrivers && (
+                    <button onClick={(e) => { e.stopPropagation(); setEditingDriver(driver); setModalOpen(true); }} className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
+                  )}
+                  {isAdmin && (
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(driver._id); }} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
                   )}
                 </div>

@@ -163,6 +163,7 @@ const VehicleDetailsModal = ({ isOpen, onClose, vehicleId, onApprove, onReject }
   const [locSaving, setLocSaving] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const canManageVehicles = isAdmin || user?.permissions?.manageVehicles;
 
   useEffect(() => {
     if (isOpen && vehicleId) fetchVehicleDetails();
@@ -376,6 +377,7 @@ const Vehicles = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const canManageVehicles = isAdmin || user?.permissions?.manageVehicles;
 
   useEffect(() => {
     fetchVehicles();
@@ -516,7 +518,7 @@ const Vehicles = () => {
             />
           </div>
           
-          {isAdmin && (
+          {canManageVehicles && (
             <button 
               onClick={() => { setSelectedVehicle(null); setIsModalOpen(true); }}
               className="btn-primary px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all"
@@ -630,7 +632,7 @@ const Vehicles = () => {
                   >
                     View Details <ArrowRight size={14} />
                   </button>
-                  {isAdmin && (
+                  {canManageVehicles && (
                     <>
                       <button onClick={() => { setSelectedVehicle(v); setIsModalOpen(true); }} className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-accent hover:bg-accent/5 rounded-xl transition-all">
                         <Edit2 size={18} />
