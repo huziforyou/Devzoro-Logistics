@@ -447,7 +447,7 @@ const Dashboard = () => {
               <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Live dispatch volume analytics</p>
             </div>
           </div>
-          <div style={{ height: '350px', width: '100%' }}>
+          <div style={{ height: '350px', width: '100%', minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={realChartData}>
                 <defs>
@@ -471,7 +471,7 @@ const Dashboard = () => {
         <div className="glass-card p-8 border border-gray-100 dark:border-gray-800">
           <h3 className="text-sm font-black text-primary dark:text-white uppercase tracking-widest mb-2">Status Analysis</h3>
           <p className="text-[10px] text-gray-400 font-bold uppercase mb-10">Real-time status mix</p>
-          <div style={{ height: '250px', width: '100%', position: 'relative' }}>
+          <div style={{ height: '250px', width: '100%', minWidth: 0, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value">
