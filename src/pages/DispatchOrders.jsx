@@ -45,6 +45,8 @@ const defaultIcon = L.icon({
   shadowSize: [41, 41]
 });
 
+import toast from 'react-hot-toast';
+
 const DispatchOrders = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth(); 
@@ -289,7 +291,7 @@ const DispatchOrders = () => {
 
   const handleViewDeliveryNote = (order) => {
     if (!order.deliveryNoteData) {
-      alert("No delivery note available");
+      toast.error("No delivery note available");
       return;
     }
 
@@ -313,7 +315,7 @@ const DispatchOrders = () => {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (err) {
       console.error("Error opening delivery note:", err);
-      alert("Could not open delivery note");
+      toast.error("Could not open delivery note");
     }
   };
 
@@ -332,9 +334,10 @@ const DispatchOrders = () => {
       
       setIsOutForDeliveryModalOpen(false);
       setIsModalOpen(false);
+      toast.success("Status updated to Out for Delivery");
     } catch (error) {
       console.error("Update failed:", error);
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     } finally {
       setIsUpdating(false);
     }
@@ -379,7 +382,7 @@ const DispatchOrders = () => {
       
       setIsDeliveryModalOpen(false);
       setIsModalOpen(false);
-      alert(isEditingDelivery ? "Delivery info updated successfully!" : "Delivery confirmed successfully!");
+      toast.success(isEditingDelivery ? "Delivery info updated successfully!" : "Delivery confirmed successfully!");
       setDeliveryData({
         deliveredDate: new Date().toISOString().split('T')[0],
         deliveredTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -392,7 +395,7 @@ const DispatchOrders = () => {
     } catch (error) {
       console.error("Delivery update failed:", error);
       const errorMsg = error.response?.data?.error || error.message || "Failed to update delivery";
-      alert(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsUpdating(false);
       setIsEditingDelivery(false);
@@ -405,9 +408,10 @@ const DispatchOrders = () => {
       await api.delete(`/dispatch/${orderId}`);
       setOrders(prev => prev.filter(order => order._id !== orderId));
       setSelectedIds(prev => prev.filter(id => id !== orderId));
+      toast.success("Dispatch deleted successfully");
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Failed to delete dispatch");
+      toast.error("Failed to delete dispatch");
     }
   };
 
@@ -418,10 +422,10 @@ const DispatchOrders = () => {
       await api.post('/dispatch/bulk-delete', { ids: selectedIds });
       setOrders(prev => prev.filter(order => !selectedIds.includes(order._id)));
       setSelectedIds([]);
-      alert("Selected orders deleted successfully");
+      toast.success("Selected orders deleted successfully");
     } catch (error) {
       console.error("Bulk delete failed:", error);
-      alert("Failed to delete selected orders");
+      toast.error("Failed to delete selected orders");
     } finally {
       setIsUpdating(false);
     }
@@ -434,10 +438,10 @@ const DispatchOrders = () => {
       await api.put('/dispatch/bulk-status', { ids: selectedIds, status });
       await fetchOrders(); // Refresh to get full updated data
       setSelectedIds([]);
-      alert(`Selected orders updated to ${status}`);
+      toast.success(`Selected orders updated to ${status}`);
     } catch (error) {
       console.error("Bulk status update failed:", error);
-      alert("Failed to update status for selected orders");
+      toast.error("Failed to update status for selected orders");
     } finally {
       setIsUpdating(false);
     }
@@ -487,7 +491,7 @@ const DispatchOrders = () => {
       dataToExport = filterDataByDate(dataToExport);
 
       if (dataToExport.length === 0) {
-        alert("No data found for the selected filters");
+        toast.error("No data found for the selected filters");
         return;
       }
 
@@ -520,7 +524,7 @@ const DispatchOrders = () => {
       XLSX.writeFile(workbook, `Dispatch_Report_${filterType}_${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (err) {
       console.error("Excel Export Error:", err);
-      alert("Failed to export Excel");
+      toast.error("Failed to export Excel");
     }
   };
 
@@ -541,7 +545,7 @@ const DispatchOrders = () => {
       dataToExport = filterDataByDate(dataToExport);
 
       if (dataToExport.length === 0) {
-        alert("No data found for the selected filters");
+        toast.error("No data found for the selected filters");
         return;
       }
 
@@ -585,7 +589,7 @@ const DispatchOrders = () => {
       document.body.removeChild(link);
     } catch (err) {
       console.error("CSV Export Error:", err);
-      alert("Failed to export CSV");
+      toast.error("Failed to export CSV");
     }
   };
 
@@ -611,7 +615,7 @@ const DispatchOrders = () => {
         dataToPrint = filterDataByDate(dataToPrint);
 
         if (dataToPrint.length === 0) {
-          alert("No data found for the selected filters");
+          toast.error("No data found for the selected filters");
           return;
         }
         
@@ -655,11 +659,11 @@ const DispatchOrders = () => {
           lat: selectedOrder.currentLocation?.lat,
           lng: selectedOrder.currentLocation?.lng
         });
-        alert('Tracking completed and order marked as Delivered!');
+        toast.success('Tracking completed and order marked as Delivered!');
         fetchOrders();
         setIsTrackingModalOpen(false);
       } catch (err) {
-        alert('Failed to complete tracking');
+        toast.error('Failed to complete tracking');
       } finally {
         setIsUpdating(false);
       }

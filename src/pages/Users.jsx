@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const PermissionItem = ({ icon: Icon, label, description, checked, onChange, disabled }) => (
   <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 ${checked ? 'bg-primary/5 border-primary/20 shadow-sm' : 'bg-gray-50/50 dark:bg-gray-800/30 border-transparent'}`}>
@@ -231,8 +232,9 @@ const Users = () => {
       }
       fetchUsers();
       setModalOpen(false);
+      toast.success(editingUser ? 'User updated successfully' : 'User registered successfully');
     } catch (error) {
-      alert(error.response?.data?.error || error.response?.data?.message || 'Action failed');
+      toast.error(error.response?.data?.error || error.response?.data?.message || 'Action failed');
     } finally {
       setActionLoading(false);
     }
@@ -240,8 +242,14 @@ const Users = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete user account?')) return;
-    try { await api.delete(`/users/${id}`); fetchUsers(); }
-    catch (error) { alert('Delete failed'); }
+    try { 
+      await api.delete(`/users/${id}`); 
+      fetchUsers(); 
+      toast.success('User deleted successfully');
+    }
+    catch (error) { 
+      toast.error('Delete failed'); 
+    }
   };
 
   const filteredUsers = users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()));

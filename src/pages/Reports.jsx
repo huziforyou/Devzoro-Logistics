@@ -18,6 +18,7 @@ import {
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { generatePDFReport } from '../utils/pdfHelper';
+import toast from 'react-hot-toast';
 
 const ReportCard = ({ title, description, icon: Icon, color, onPDF, loading }) => (
   <div className="glass-card p-8 border border-gray-100 dark:border-gray-800 hover:border-accent/20 transition-all group cursor-pointer">
@@ -102,7 +103,7 @@ const Reports = () => {
       await generatePDFReport("Vehicle Performance Report", columns, data, `Vehicle_Report_${filterType}.pdf`);
     } catch (error) {
       console.error(error);
-      alert("Failed to generate report");
+      toast.error("Failed to generate report");
     } finally {
       setLoadingReport(null);
     }
@@ -128,7 +129,7 @@ const Reports = () => {
       await generatePDFReport("Driver Trip Report", columns, data, `Driver_Report_${filterType}.pdf`);
     } catch (error) {
       console.error(error);
-      alert("Failed to generate report");
+      toast.error("Failed to generate report");
     } finally {
       setLoadingReport(null);
     }
@@ -155,7 +156,7 @@ const Reports = () => {
       await generatePDFReport("Dispatch Volume Report", columns, data, `Dispatch_Report_${filterType}.pdf`);
     } catch (error) {
       console.error(error);
-      alert("Failed to generate report");
+      toast.error("Failed to generate report");
     } finally {
       setLoadingReport(null);
     }
@@ -181,7 +182,7 @@ const Reports = () => {
       await generatePDFReport("Delay & Active Analytics Report", columns, data, `Delay_Analytics_${filterType}.pdf`);
     } catch (error) {
       console.error(error);
-      alert("Failed to generate report");
+      toast.error("Failed to generate report");
     } finally {
       setLoadingReport(null);
     }

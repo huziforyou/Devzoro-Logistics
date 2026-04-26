@@ -30,6 +30,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generatePDFReport } from '../utils/pdfHelper';
+import toast from 'react-hot-toast';
 
 const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,6 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
     phoneNumber: '',
     assignedVehicle: '',
     vehicleType: '',
-    status: 'pending',
     licenseExpiry: '',
     iqamaPdf: ''
   });
@@ -55,7 +55,6 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
         phoneNumber: driver.phoneNumber || '',
         assignedVehicle: driver.assignedVehicle?._id || driver.assignedVehicle || '',
         vehicleType: driver.vehicleType || driverVehicle?.vehicleType || '',
-        status: driver.status || 'pending',
         licenseExpiry: driver.licenseExpiry ? new Date(driver.licenseExpiry).toISOString().split('T')[0] : '',
         iqamaPdf: driver.iqamaPdf || ''
       });
@@ -66,7 +65,6 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
         phoneNumber: '',
         assignedVehicle: '',
         vehicleType: '',
-        status: 'pending',
         licenseExpiry: '',
         iqamaPdf: ''
       });
@@ -77,6 +75,7 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
     if (formData.vehicleType) {
       const filtered = vehicles.filter(v => 
         v.vehicleType === formData.vehicleType && 
+        v.status === 'Approved' &&
         (v.assignmentStatus === 'approved' || !v.assignedDriver)
       );
       setFilteredVehicles(filtered);
@@ -91,7 +90,7 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
     const file = e.target.files[0];
     if (file) {
       if (file.type !== 'application/pdf') {
-        alert('Please upload a PDF file');
+        toast.error('Please upload a PDF file');
         return;
       }
       const reader = new FileReader();
@@ -173,14 +172,6 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">License Expiry</label>
             <input type="date" value={formData.licenseExpiry} onChange={(e) => setFormData({...formData, licenseExpiry: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Status</label>
-            <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-4 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none">
-              <option value="pending">Pending</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
           </div>
           <div className="space-y-1.5 md:col-span-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Iqama PDF (Upload Document)</label>
@@ -268,7 +259,7 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
       await generatePDFReport(`Driver Profile: ${driver.fullName}`, ['Detail', 'Information'], detailsData, `Driver_Profile_${driver.fullName}.pdf`);
     } catch (error) {
       console.error(error);
-      alert("Failed to export profile");
+      toast.error("Failed to export profile");
     }
   };
 
@@ -451,28 +442,36 @@ const Drivers = () => {
 
   const handleSave = async (formData) => {
     if (!formData.assignedVehicle) {
-      alert('Please select a vehicle first');
+      toast.error('Please select a vehicle first');
       return;
     }
     if (!formData.fullName.trim()) {
-      alert('Please enter driver name');
+      toast.error('Please enter driver name');
       return;
     }
     if (!formData.iqamaNumber.trim()) {
-      alert('Please enter Iqama number');
+      toast.error('Please enter Iqama number');
       return;
     }
     setActionLoading(true);
     try {
-      if (editingDriver) await api.put(`/drivers/${editingDriver._id}`, formData);
-      else await api.post('/drivers', formData);
+      if (editingDriver) {
+        await api.put(`/drivers/${editingDriver._id}`, formData);
+        toast.success('Driver updated successfully');
+      } else {
+        await api.post('/drivers', formData);
+        toast.success('Your request has been sent to the Admin for approval.', {
+          duration: 5000,
+          icon: '📝'
+        });
+      }
       fetchDrivers();
       setModalOpen(false);
       setEditingDriver(null);
     } catch (error) {
       console.error('Driver save error:', error.response || error);
       const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Action failed';
-      alert(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -482,9 +481,10 @@ const Drivers = () => {
     if (!window.confirm('Delete this driver?')) return;
     try {
       await api.delete(`/drivers/${id}`);
+      toast.success('Driver deleted successfully');
       fetchDrivers();
     } catch (error) {
-      alert('Delete failed');
+      toast.error('Delete failed');
     }
   };
 
@@ -502,11 +502,16 @@ const Drivers = () => {
       await generatePDFReport("Fleet Drivers Report", columns, data, "Drivers_List_Report.pdf");
     } catch (error) {
       console.error(error);
-      alert("Failed to export PDF");
+      toast.error("Failed to export PDF");
     }
   };
 
-  const filteredDrivers = drivers.filter(d => (d.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) || (d.iqamaNumber || '').toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredDrivers = drivers.filter(d => 
+    d.status === 'Approved' && (
+      (d.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (d.iqamaNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <div className="space-y-8 pb-20">
@@ -528,6 +533,25 @@ const Drivers = () => {
             </button>
           )}
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: 'Active Drivers', value: drivers.length, icon: User, color: 'bg-blue-500' },
+          { label: 'Approved', value: drivers.filter(d => d.status === 'Approved').length, icon: CheckCircle2, color: 'bg-green-500' },
+          { label: 'Pending Assignment', value: drivers.filter(d => d.hasPendingAssignment).length, icon: Clock, color: 'bg-amber-500' },
+          { label: 'Available', value: drivers.filter(d => !d.assignedVehicle).length, icon: AlertCircle, color: 'bg-gray-500' },
+        ].map((stat, idx) => (
+          <div key={idx} className="glass-card p-6 flex items-center gap-4 border border-gray-100 dark:border-gray-800">
+            <div className={`w-12 h-12 ${stat.color} bg-opacity-10 rounded-2xl flex items-center justify-center text-${stat.color.split('-')[1]}-500`}>
+              <stat.icon size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-xl font-black text-primary dark:text-white">{stat.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="glass-card p-6 flex items-center border border-gray-100 dark:border-gray-800">

@@ -31,26 +31,24 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generatePDFReport } from '../utils/pdfHelper';
+import toast from 'react-hot-toast';
 
 const VehicleModal = ({ isOpen, onClose, vehicle, onSave, loading }) => {
   const [formData, setFormData] = useState({
     plateNumber: '',
-    vehicleType: 'FlatBack',
-    status: 'active'
+    vehicleType: 'FlatBack'
   });
 
   useEffect(() => {
     if (vehicle) {
       setFormData({
         plateNumber: vehicle.plateNumber || vehicle.name || '',
-        vehicleType: vehicle.vehicleType || 'FlatBack',
-        status: vehicle.status || 'active'
+        vehicleType: vehicle.vehicleType || 'FlatBack'
       });
     } else {
       setFormData({
         plateNumber: '',
-        vehicleType: 'FlatBack',
-        status: 'active'
+        vehicleType: 'FlatBack'
       });
     }
   }, [vehicle]);
@@ -191,15 +189,16 @@ const VehicleDetailsModal = ({ isOpen, onClose, vehicleId, onApprove, onReject }
     const latNum = Number(loc.lat);
     const lngNum = Number(loc.lng);
     if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
-      alert('Please enter valid latitude/longitude numbers');
+      toast.error('Please enter valid latitude/longitude numbers');
       return;
     }
     try {
       setLocSaving(true);
       await api.put(`/vehicles/${vehicle._id}/location`, { lat: latNum, lng: lngNum });
+      toast.success('Location updated successfully');
       await fetchVehicleDetails();
     } catch (e) {
-      alert('Failed to update live location');
+      toast.error('Failed to update live location');
     } finally {
       setLocSaving(false);
     }
@@ -409,14 +408,19 @@ const Vehicles = () => {
       setModalLoading(true);
       if (selectedVehicle) {
         await api.put(`/vehicles/${selectedVehicle._id}`, formData);
+        toast.success('Vehicle updated successfully');
       } else {
         await api.post('/vehicles', formData);
+        toast.success('Your request has been sent to the Admin for approval.', {
+          duration: 5000,
+          icon: '📝'
+        });
       }
       setIsModalOpen(false);
       fetchVehicles();
     } catch (error) {
       console.error('Failed to save vehicle:', error);
-      alert(error.response?.data?.error || 'Failed to save vehicle');
+      toast.error(error.response?.data?.error || 'Failed to save vehicle');
     } finally {
       setModalLoading(false);
     }
@@ -426,9 +430,11 @@ const Vehicles = () => {
     if (window.confirm('Are you sure you want to delete this vehicle?')) {
       try {
         await api.delete(`/vehicles/${id}`);
+        toast.success('Vehicle deleted successfully');
         fetchVehicles();
       } catch (error) {
         console.error('Failed to delete vehicle');
+        toast.error('Failed to delete vehicle');
       }
     }
   };
@@ -437,10 +443,12 @@ const Vehicles = () => {
     try {
       setModalLoading(true);
       await api.put(`/vehicles/${selectedVehicle._id}/assign`, { driverId });
+      toast.success('Assignment request sent to admin');
       setIsAssignModalOpen(false);
       fetchVehicles();
     } catch (error) {
       console.error('Failed to assign driver');
+      toast.error(error.response?.data?.error || 'Failed to assign driver');
     } finally {
       setModalLoading(false);
     }
@@ -449,6 +457,7 @@ const Vehicles = () => {
   const handleApprove = async (id) => {
     try {
       await api.put(`/vehicles/${id}/approve`);
+      toast.success('Assignment approved');
       fetchVehicles();
       if (selectedVehicle?._id === id) {
         // Refresh details modal if it's open for this vehicle
@@ -457,12 +466,14 @@ const Vehicles = () => {
       }
     } catch (error) {
       console.error('Failed to approve assignment');
+      toast.error('Failed to approve assignment');
     }
   };
 
   const handleReject = async (id) => {
     try {
       await api.put(`/vehicles/${id}/reject`);
+      toast.success('Assignment rejected');
       fetchVehicles();
       if (selectedVehicle?._id === id) {
         const res = await api.get(`/vehicles/${id}`);
@@ -470,12 +481,15 @@ const Vehicles = () => {
       }
     } catch (error) {
       console.error('Failed to reject assignment');
+      toast.error('Failed to reject assignment');
     }
   };
 
   const filteredVehicles = vehicles.filter(v => 
-    (v.plateNumber || v.name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.vehicleType?.toLowerCase().includes(searchTerm.toLowerCase())
+    v.status === 'Approved' && (
+      (v.plateNumber || v.name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.vehicleType?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   return (
@@ -517,8 +531,8 @@ const Vehicles = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { label: 'Total Fleet', value: vehicles.length, icon: Truck, color: 'bg-blue-500' },
-          { label: 'Active', value: vehicles.filter(v => v.status === 'active').length, icon: CheckCircle2, color: 'bg-green-500' },
-          { label: 'Pending Approval', value: vehicles.filter(v => v.assignmentStatus === 'pending').length, icon: Clock, color: 'bg-amber-500' },
+          { label: 'Approved', value: vehicles.filter(v => v.status === 'Approved').length, icon: CheckCircle2, color: 'bg-green-500' },
+          { label: 'Pending Assignment', value: vehicles.filter(v => v.assignmentStatus === 'pending').length, icon: Clock, color: 'bg-amber-500' },
           { label: 'Unassigned', value: vehicles.filter(v => !v.assignedDriver).length, icon: AlertCircle, color: 'bg-gray-500' },
         ].map((stat, idx) => (
           <div key={idx} className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm flex items-center gap-6">
@@ -554,7 +568,8 @@ const Vehicles = () => {
                 {/* Status Badge */}
                 <div className="absolute top-8 right-8 flex flex-col items-end gap-2">
                   <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                    v.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                    v.status === 'Approved' ? 'bg-green-50 text-green-600' : 
+                    v.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
                   }`}>
                     {v.status}
                   </span>

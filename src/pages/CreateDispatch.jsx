@@ -28,7 +28,8 @@ import L from 'leaflet';
 
 import { QRCodeCanvas } from 'qrcode.react';
 
-// CSS for Z-Index Fix and Search Results Visibility
+import toast from 'react-hot-toast';
+
 const customMapStyles = `
   .custom-search-container {
     z-index: 1001 !important;
@@ -360,8 +361,9 @@ const CreateDispatch = () => {
       }
       setCreatedDispatch(res.data.data || res.data);
       setShowQR(true);
+      toast.success('Dispatch created successfully!');
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save dispatch');
+      toast.error(err.response?.data?.error || 'Failed to save dispatch');
     } finally {
       setLoading(false);
     }

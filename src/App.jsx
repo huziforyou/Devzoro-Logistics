@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import CreateDispatch from './pages/CreateDispatch';
@@ -53,6 +54,7 @@ function App() {
 
   return (
     <ThemeProvider>
+      <Toaster position="top-right" />
       <AuthProvider>
         <Router>
           <Routes>

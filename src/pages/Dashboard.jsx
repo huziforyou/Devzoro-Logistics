@@ -27,6 +27,7 @@ import {
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { generatePDFReport } from '../utils/pdfHelper';
+import toast from 'react-hot-toast';
 
 const StatCard = ({ title, value, icon: Icon, color, trend, trendValue }) => (
   <div className="glass-card p-6 border border-gray-100 dark:border-gray-800">
@@ -61,6 +62,7 @@ const Dashboard = () => {
     drivers: 0, active: 0, completed: 0, pending: 0, vehicles: 0
   });
   const [pendingVehicleAssignments, setPendingVehicleAssignments] = useState([]);
+  const [pendingRegistrations, setPendingRegistrations] = useState({ vehicles: [], drivers: [] });
   const [recentDispatches, setRecentDispatches] = useState([]);
   const [realChartData, setRealChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,11 +74,16 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [dRes, oRes, vehRes] = await Promise.all([
+      const [dRes, oRes, vehRes, pendingRes] = await Promise.all([
         api.get('/drivers'),
         api.get('/dispatch'),
-        api.get('/vehicles')
+        api.get('/vehicles'),
+        isAdmin ? api.get('/admin/pending-approvals') : Promise.resolve({ data: { data: { vehicles: [], drivers: [] } } })
       ]);
+
+      if (isAdmin) {
+        setPendingRegistrations(pendingRes.data.data);
+      }
 
       let orders = oRes.data.data;
       
@@ -154,21 +161,34 @@ const Dashboard = () => {
     }
   };
 
+  const handleApproveRegistration = async (type, id, status) => {
+    try {
+      const endpoint = type === 'vehicle' ? `/vehicles/approve/${id}` : `/drivers/approve/${id}`;
+      await api.put(endpoint, { status });
+      toast.success(`${type} ${status} successfully`);
+      await fetchDashboardData();
+    } catch (e) {
+      toast.error(`Failed to ${status} ${type}`);
+    }
+  };
+
   const handleApproveVehicleAssignment = async (vehicleId) => {
     try {
       await api.put(`/vehicles/${vehicleId}/approve`);
+      toast.success('Vehicle assignment approved');
       await fetchDashboardData();
     } catch (e) {
-      alert('Failed to approve assignment');
+      toast.error('Failed to approve assignment');
     }
   };
 
   const handleRejectVehicleAssignment = async (vehicleId) => {
     try {
       await api.put(`/vehicles/${vehicleId}/reject`);
+      toast.success('Vehicle assignment rejected');
       await fetchDashboardData();
     } catch (e) {
-      alert('Failed to reject assignment');
+      toast.error('Failed to reject assignment');
     }
   };
 
@@ -186,7 +206,7 @@ const Dashboard = () => {
       await generatePDFReport("Enterprise Dashboard Summary", columns, data, "Dashboard_Summary_Report.pdf");
     } catch (error) {
       console.error(error);
-      alert("Failed to export summary");
+      toast.error("Failed to export summary");
     }
   };
 
@@ -231,51 +251,138 @@ const Dashboard = () => {
       </div>
 
       {isAdmin && (
-        <div className="glass-card p-8 border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-sm font-black text-primary dark:text-white uppercase tracking-widest">Pending Vehicle Approvals</h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Driver ↔ vehicle assignment requests</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Pending Registrations */}
+          <div className="glass-card p-8 border border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-sm font-black text-primary dark:text-white uppercase tracking-widest">Pending Registrations</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">New vehicles and drivers awaiting approval</p>
+              </div>
+              <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest">
+                {pendingRegistrations.vehicles.length + pendingRegistrations.drivers.length} total
+              </span>
             </div>
-            <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest">
-              {pendingVehicleAssignments.length} pending
-            </span>
+
+            <div className="space-y-6">
+              {/* Vehicles */}
+              {pendingRegistrations.vehicles.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Vehicles</p>
+                  {pendingRegistrations.vehicles.map((v) => (
+                    <div key={v._id} className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/60 dark:bg-gray-900/40 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-primary dark:text-white uppercase tracking-tight truncate">
+                          {v.plateNumber} <span className="text-gray-400 font-bold">({v.vehicleType})</span>
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApproveRegistration('vehicle', v._id, 'Approved')}
+                          className="px-5 py-3 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleApproveRegistration('vehicle', v._id, 'Rejected')}
+                          className="px-5 py-3 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Drivers */}
+              {pendingRegistrations.drivers.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Drivers</p>
+                  {pendingRegistrations.drivers.map((d) => (
+                    <div key={d._id} className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/60 dark:bg-gray-900/40 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-primary dark:text-white uppercase tracking-tight truncate">
+                          {d.fullName}
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                          ID: <span className="text-primary dark:text-white">{d.iqamaNumber}</span>
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApproveRegistration('driver', d._id, 'Approved')}
+                          className="px-5 py-3 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleApproveRegistration('driver', d._id, 'Rejected')}
+                          className="px-5 py-3 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {pendingRegistrations.vehicles.length === 0 && pendingRegistrations.drivers.length === 0 && (
+                <div className="py-10 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  No pending registrations
+                </div>
+              )}
+            </div>
           </div>
 
-          {pendingVehicleAssignments.length === 0 ? (
-            <div className="py-10 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">
-              No pending approvals
+          {/* Pending Vehicle Assignments */}
+          <div className="glass-card p-8 border border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-sm font-black text-primary dark:text-white uppercase tracking-widest">Pending Assignments</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Driver ↔ vehicle assignment requests</p>
+              </div>
+              <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest">
+                {pendingVehicleAssignments.length} pending
+              </span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {pendingVehicleAssignments.map((v) => (
-                <div key={v._id} className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/60 dark:bg-gray-900/40 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-primary dark:text-white uppercase tracking-tight truncate">
-                      {v.plateNumber} <span className="text-gray-400 font-bold">({v.vehicleType})</span>
-                    </p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                      Requested driver: <span className="text-primary dark:text-white">{v.pendingDriverName || 'N/A'}</span>
-                    </p>
+
+            {pendingVehicleAssignments.length === 0 ? (
+              <div className="py-10 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">
+                No pending assignments
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingVehicleAssignments.map((v) => (
+                  <div key={v._id} className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/60 dark:bg-gray-900/40 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-primary dark:text-white uppercase tracking-tight truncate">
+                        {v.plateNumber} <span className="text-gray-400 font-bold">({v.vehicleType})</span>
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                        Requested driver: <span className="text-primary dark:text-white">{v.pendingDriverName || 'N/A'}</span>
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApproveVehicleAssignment(v._id)}
+                        className="px-5 py-3 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleRejectVehicleAssignment(v._id)}
+                        className="px-5 py-3 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all"
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleApproveVehicleAssignment(v._id)}
-                      className="px-5 py-3 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleRejectVehicleAssignment(v._id)}
-                      className="px-5 py-3 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

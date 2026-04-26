@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import toast from 'react-hot-toast';
 
 // Fix Leaflet icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -107,7 +108,7 @@ const TrackingPage = () => {
 
   const startTracking = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
+      toast.error('Geolocation is not supported by your browser');
       return;
     }
 
@@ -182,10 +183,10 @@ const TrackingPage = () => {
           lng: pos?.lng
         });
         
-        alert('SUCCESS: Delivery marked as Delivered!');
+        toast.success('SUCCESS: Delivery marked as Delivered!');
         fetchTrackingDetails();
       } catch (err) {
-        alert('Error: Failed to mark as delivered');
+        toast.error('Error: Failed to mark as delivered');
       }
     }
   };

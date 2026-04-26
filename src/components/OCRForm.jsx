@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const FormField = ({ label, name, icon: Icon, register, error, isSelected, onToggle, i18n, type = "text" }) => (
   <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isSelected ? 'border-accent bg-accent/5' : 'border-gray-100 dark:border-gray-800 bg-gray-50/30 opacity-70'}`}>
@@ -149,7 +150,7 @@ const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
   };
 
   const submitToCollection = async () => {
-    if (!collectionName) return alert('Please enter a collection name');
+    if (!collectionName) return toast.error('Please enter a collection name');
     
     const formData = watch();
     const finalData = {
@@ -163,8 +164,9 @@ const OCRForm = ({ initialData, onSave, onReRun, onDownload }) => {
       await onSave(finalData);
       setShowCollectionModal(false);
       setCollectionName('');
+      toast.success('Collection saved successfully');
     } catch (err) {
-      alert('Failed to save collection');
+      toast.error('Failed to save collection');
     }
   };
 
