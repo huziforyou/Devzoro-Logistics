@@ -59,6 +59,17 @@ const Dashboard = () => {
   const { user } = useAuth();
   const isStaff = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'manager';
   const canSeePending = user?.role === 'admin' || user?.role === 'super-admin';
+  const isSuperAdmin = user?.role === 'super-admin';
+
+  // Override permissions for super-admin globally in this component
+  const effectivePermissions = isSuperAdmin ? {
+    viewVehicles: true,
+    viewDrivers: true,
+    createDispatch: true,
+    editDispatch: true,
+    viewReports: true,
+    manageUsers: true
+  } : (user?.permissions || {});
   const [stats, setStats] = useState({
     drivers: 0, active: 0, completed: 0, pending: 0, vehicles: 0
   });

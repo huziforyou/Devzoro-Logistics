@@ -208,6 +208,15 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
 
 const Users = () => {
   const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'super-admin';
+  const effectivePermissions = isSuperAdmin ? {
+    manageUsers: true,
+    viewVehicles: true,
+    viewDrivers: true,
+    createDispatch: true,
+    editDispatch: true,
+    viewReports: true
+  } : (currentUser?.permissions || {});
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -271,11 +280,11 @@ const Users = () => {
           </button>
         )} */}
        
-{(currentUser?.role === 'super-admin' || currentUser?.permissions?.manageUsers) && (
-  <button onClick={() => { setEditingUser(null); setModalOpen(true); }} className="btn-primary px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 flex items-center gap-2 hover:scale-[1.02] transition-all">
-    <UserPlus size={20} /> New User
-  </button>
-)}
+{(isSuperAdmin || effectivePermissions?.manageUsers) && (
+          <button onClick={() => { setEditingUser(null); setModalOpen(true); }} className="btn-primary px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 flex items-center gap-2 hover:scale-[1.02] transition-all">
+            <UserPlus size={20} /> New User
+          </button>
+        )}
       </div>
 
       <div className="glass-card p-6 flex items-center border border-gray-100 dark:border-gray-800">
@@ -320,7 +329,8 @@ const Users = () => {
                   </td>
                   <td className="p-8 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {(currentUser?.role === 'super-admin' || currentUser?.permissions?.manageUsers) && (
+                      {/* Super Admin cannot be edited or deleted by anyone */}
+                      {u.role !== 'super-admin' && (isSuperAdmin || effectivePermissions?.manageUsers) && (
                         <>
                           <button onClick={() => { setEditingUser(u); setModalOpen(true); }} className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
                           <button onClick={() => handleDelete(u._id)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
