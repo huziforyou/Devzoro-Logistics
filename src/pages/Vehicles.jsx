@@ -415,7 +415,8 @@ const Vehicles = () => {
       setIsModalOpen(false);
       fetchVehicles();
     } catch (error) {
-      console.error('Failed to save vehicle');
+      console.error('Failed to save vehicle:', error);
+      alert(error.response?.data?.error || 'Failed to save vehicle');
     } finally {
       setModalLoading(false);
     }
