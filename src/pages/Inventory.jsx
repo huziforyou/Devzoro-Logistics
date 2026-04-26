@@ -27,7 +27,7 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All'); // All, Shortage, Excess, Exact
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin' || currentUser?.role === 'manager';
 
   useEffect(() => {
     fetchOrders();

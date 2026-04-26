@@ -57,7 +57,8 @@ const StatCard = ({ title, value, icon: Icon, color, trend, trendValue }) => (
 const Dashboard = () => {
   const { i18n } = useTranslation();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isStaff = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'manager';
+  const canSeePending = user?.role === 'admin' || user?.role === 'super-admin';
   const [stats, setStats] = useState({
     drivers: 0, active: 0, completed: 0, pending: 0, vehicles: 0
   });
@@ -78,10 +79,10 @@ const Dashboard = () => {
         api.get('/drivers'),
         api.get('/dispatch'),
         api.get('/vehicles'),
-        isAdmin ? api.get('/admin/pending-approvals') : Promise.resolve({ data: { data: { vehicles: [], drivers: [] } } })
+        canSeePending ? api.get('/admin/pending-approvals') : Promise.resolve({ data: { data: { vehicles: [], drivers: [] } } })
       ]);
 
-      if (isAdmin) {
+      if (canSeePending) {
         setPendingRegistrations(pendingRes.data.data);
       }
 
@@ -250,7 +251,7 @@ const Dashboard = () => {
         <StatCard title="Order Pending" value={stats.pending} icon={Clock} color="amber" />
       </div>
 
-      {isAdmin && (
+      {canSeePending && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Pending Registrations */}
           <div className="glass-card p-8 border border-gray-100 dark:border-gray-800">
@@ -386,7 +387,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {!isAdmin && myRequests.length > 0 && (
+      {!isStaff && myRequests.length > 0 && (
         <div className="glass-card p-8 border border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-6">
             <div>

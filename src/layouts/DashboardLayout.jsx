@@ -60,12 +60,12 @@ const DashboardLayout = ({ children }) => {
     { to: '/drivers', icon: Users, label: i18n.language === 'ar' ? 'السائقين' : 'Drivers', permission: true },
     { to: '/dispatch', icon: ClipboardList, label: i18n.language === 'ar' ? 'أوامر الإرسال' : 'Dispatch Orders', permission: true },
     { to: '/reports', icon: FileText, label: i18n.language === 'ar' ? 'التقارير' : 'Reports', permission: user?.permissions?.viewReports },
-    { to: '/users', icon: Users, label: i18n.language === 'ar' ? 'المستخدمين' : 'Users', permission: user?.role === 'super-admin' || user?.role === 'admin' },
+    { to: '/users', icon: Users, label: i18n.language === 'ar' ? 'المستخدمين' : 'Users', permission: user?.role === 'super-admin' || user?.role === 'admin' || user?.role === 'manager' },
     { to: '/settings', icon: Settings, label: i18n.language === 'ar' ? 'الإعدادات' : 'Settings', permission: true },
   ];
 
   const visibleLinks = navLinks.filter(link => {
-    const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+    const isAdmin = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'manager';
     return isAdmin || link.permission === true || !!link.permission;
   });
 

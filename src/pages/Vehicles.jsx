@@ -162,7 +162,7 @@ const VehicleDetailsModal = ({ isOpen, onClose, vehicleId, onApprove, onReject }
   const [loc, setLoc] = useState({ lat: '', lng: '' });
   const [locSaving, setLocSaving] = useState(false);
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'manager';
   const canManageVehicles = isAdmin || user?.permissions?.manageVehicles;
 
   useEffect(() => {
@@ -376,7 +376,7 @@ const Vehicles = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'manager';
   const canManageVehicles = isAdmin || user?.permissions?.manageVehicles;
 
   useEffect(() => {

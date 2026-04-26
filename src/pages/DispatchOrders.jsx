@@ -148,7 +148,7 @@ const DispatchOrders = () => {
     deliveryNote: null
   });
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin' || currentUser?.role === 'manager';
 
   // Keyboard Support: Close modal on Escape key
   useEffect(() => {

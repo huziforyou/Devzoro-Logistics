@@ -408,7 +408,7 @@ const DriverPassModal = ({ isOpen, onClose, driverId }) => {
 const Drivers = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'manager';
   const canManageDrivers = isAdmin || user?.permissions?.manageDrivers;
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);

@@ -31,8 +31,8 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
     return <Navigate to="/login" />;
   }
 
-  // Admin Override: Agar admin hai toh permission check skip karo
-  if (user.role === 'admin' || user.role === 'super-admin') {
+  // Admin/Manager Override: Agar admin/manager hai toh permission check skip karo
+  if (user.role === 'admin' || user.role === 'super-admin' || user.role === 'manager') {
     return <DashboardLayout>{children}</DashboardLayout>;
   }
 
