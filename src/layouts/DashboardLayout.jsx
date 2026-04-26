@@ -7,6 +7,7 @@ import {
   Truck, 
   Users, 
   Settings, 
+  UserCog,
   LogOut, 
   Menu, 
   Sun,
@@ -60,13 +61,13 @@ const DashboardLayout = ({ children }) => {
     { to: '/drivers', icon: Users, label: i18n.language === 'ar' ? 'السائقين' : 'Drivers', permission: user?.permissions?.viewDrivers },
     { to: '/dispatch', icon: ClipboardList, label: i18n.language === 'ar' ? 'أوامر الإرسال' : 'Dispatch Orders', permission: user?.permissions?.createDispatch || user?.permissions?.editDispatch },
     { to: '/reports', icon: FileText, label: i18n.language === 'ar' ? 'التقارير' : 'Reports', permission: user?.permissions?.viewReports },
-    { to: '/users', icon: Users, label: i18n.language === 'ar' ? 'المستخدمين' : 'Users', permission: user?.permissions?.manageUsers },
+    { to: '/users', icon: UserCog, label: i18n.language === 'ar' ? 'المستخدمين' : 'Users', permission: user?.permissions?.manageUsers },
     { to: '/settings', icon: Settings, label: i18n.language === 'ar' ? 'الإعدادات' : 'Settings', permission: true },
   ];
 
   const visibleLinks = navLinks.filter(link => {
-    // Super-admin always sees everything
-    if (user?.role === 'super-admin') return true;
+    // Super-admin and Admin always see everything relevant to management
+    if (user?.role === 'super-admin' || user?.role === 'admin') return true;
     
     // For other roles, follow the permission matrix strictly
     return link.permission === true || !!link.permission;

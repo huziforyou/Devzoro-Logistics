@@ -209,7 +209,8 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
 const Users = () => {
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === 'super-admin';
-  const effectivePermissions = isSuperAdmin ? {
+  const isAdmin = currentUser?.role === 'admin';
+  const effectivePermissions = (isSuperAdmin || isAdmin) ? {
     manageUsers: true,
     viewVehicles: true,
     viewDrivers: true,
