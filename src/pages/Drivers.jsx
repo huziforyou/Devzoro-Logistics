@@ -75,7 +75,10 @@ const DriverModal = ({ isOpen, onClose, driver, onSave, vehicles, loading }) => 
 
   useEffect(() => {
     if (formData.vehicleType) {
-      const filtered = vehicles.filter(v => v.vehicleType === formData.vehicleType);
+      const filtered = vehicles.filter(v => 
+        v.vehicleType === formData.vehicleType && 
+        (v.assignmentStatus === 'approved' || !v.assignedDriver)
+      );
       setFilteredVehicles(filtered);
     } else {
       setFilteredVehicles([]);
