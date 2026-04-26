@@ -110,8 +110,10 @@ const UserModal = ({ isOpen, onClose, user, onSave, loading }) => {
         setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: true });
         break;
       case 'admin':
-      case 'manager':
         setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: true });
+        break;
+      case 'manager':
+        setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: true, editDispatch: true, viewReports: true, manageUsers: false });
         break;
       case 'viewer':
         setPermissions({ viewVehicles: true, viewDrivers: true, createDispatch: false, editDispatch: false, viewReports: true, manageUsers: false });
@@ -269,8 +271,8 @@ const Users = () => {
           </button>
         )} */}
        
-{(currentUser?.role === 'admin' || currentUser?.role === 'super-admin' || currentUser?.role === 'manager') && (
-  <button onClick={() => { setEditingUser(null); setModalOpen(true); }} className="...">
+{(currentUser?.role === 'super-admin' || currentUser?.permissions?.manageUsers) && (
+  <button onClick={() => { setEditingUser(null); setModalOpen(true); }} className="btn-primary px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 flex items-center gap-2 hover:scale-[1.02] transition-all">
     <UserPlus size={20} /> New User
   </button>
 )}
@@ -318,9 +320,11 @@ const Users = () => {
                   </td>
                   <td className="p-8 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => { setEditingUser(u); setModalOpen(true); }} className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
-                      {(currentUser?.role === 'admin' || currentUser?.role === 'super-admin' || currentUser?.role === 'manager') && (
-                        <button onClick={() => handleDelete(u._id)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
+                      {(currentUser?.role === 'super-admin' || currentUser?.permissions?.manageUsers) && (
+                        <>
+                          <button onClick={() => { setEditingUser(u); setModalOpen(true); }} className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Edit2 size={18} /></button>
+                          <button onClick={() => handleDelete(u._id)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
+                        </>
                       )}
                     </div>
                   </td>
